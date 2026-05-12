@@ -228,7 +228,7 @@ function CostComposition({ result, variant = 'default', showLockButton = false, 
           <p>Total study cost: {formatCurrency(result.TRUE_COST)}</p>
           {showLockButton && (
             <button className="interpretation-lock-btn" onClick={onLockIn}>
-              Lock Cost In For Scenario Modeling
+              Lock In Cost For Scenario Modeling
             </button>
           )}
         </div>
