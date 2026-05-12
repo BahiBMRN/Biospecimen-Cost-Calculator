@@ -243,7 +243,6 @@ function DeltaComparisonChart({ baselineResult, scenarioResult }) {
 
   return (
     <div className="chart-block delta-chart-block">
-      <h3>Scenario Difference View</h3>
 
       <div className="delta-section">
         <div className="delta-section-title">Per-Sample Cost Delta</div>
@@ -508,6 +507,12 @@ function App() {
   };
 
   const applyScenario = (scenario) => {
+    if (activeScenario === scenario) {
+      setScenarioInputs({ ...lockedBaselineInputs });
+      setActiveScenario(null);
+      return;
+    }
+
     setActiveScenario(scenario);
     setScenarioInputs({ ...lockedBaselineInputs, ...PRESETS[scenario] });
   };
@@ -569,7 +574,7 @@ function App() {
             <p className="sub">
               {activeTab === 'calculator'
                 ? 'This calculator models the cost of biospecimen collections for the lifetime of the study. Adjust the below parameters to view cost impacts in real time.'
-                : 'Scenario modeling starts from the locked baseline. Select a predefined scenario or fine-tune study and sample levers to model custom outcomes.'}
+                : 'Select a predefined scenario or fine-tune study and sample levers to see impact of change on total costs.'}
             </p>
           </section>
 

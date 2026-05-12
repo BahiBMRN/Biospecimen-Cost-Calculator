@@ -6,7 +6,7 @@
 	--muted: #aeb9d6;
 	--accent: #70e1ff;
 	--accent-2: #9a7cff;
-	--accent-warm-dark: #8a4b33;
+	--accent-warm-dark: #3f2d72;
 	--border: rgba(255, 255, 255, 0.12);
 	--shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
 	--radius: 22px;
@@ -43,7 +43,7 @@ body {
 	align-items: center;
 	gap: 10px;
 	margin-right: 20px;
-	font-size: 0.85rem;
+	font-size: 1.5rem;
 	font-weight: 700;
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
@@ -52,12 +52,12 @@ body {
 	opacity: 0.85;
 }
 
-.tab-bar-logo svg { width: 24px; height: 24px; }
+.tab-bar-logo svg { width: 30px; height: 30px; }
 
 .tab-btn {
 	position: relative;
 	font: inherit;
-	font-size: 0.92rem;
+	font-size: 1.1rem;
 	font-weight: 600;
 	color: var(--muted);
 	background: transparent;
@@ -363,8 +363,8 @@ input[type='number'] {
 	width: 100%;
 	font-weight: 700;
 	line-height: 1.3;
-	background: linear-gradient(145deg, rgba(255, 168, 122, 0.35), rgba(255, 169, 128, 0.18));
-	border-color: rgba(255, 169, 128, 0.55);
+	background: linear-gradient(145deg, rgba(132, 102, 232, 0.35), rgba(98, 75, 186, 0.18));
+	border-color: rgba(146, 118, 232, 0.55);
 }
 
 .composition-badge {
@@ -387,8 +387,8 @@ input[type='number'] {
 }
 
 .scenario-composition {
-	background: linear-gradient(145deg, rgba(255, 168, 122, 0.2), rgba(255, 255, 255, 0.05));
-	border-color: rgba(255, 169, 128, 0.45);
+	background: linear-gradient(145deg, rgba(132, 102, 232, 0.22), rgba(255, 255, 255, 0.05));
+	border-color: rgba(146, 118, 232, 0.45);
 }
 
 .scenario-results-stack {
@@ -405,8 +405,8 @@ input[type='number'] {
 .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 20px; }
 .metric { padding: 10px; border-radius: 12px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); }
 .metric.metric-important {
-	background: linear-gradient(140deg, rgba(24, 86, 62, 0.5), rgba(14, 30, 58, 0.62));
-	border: 3px solid rgba(116, 236, 189, 0.9);
+	background: linear-gradient(140deg, rgba(14, 44, 92, 0.5), rgba(11, 25, 52, 0.62));
+	border: 3px solid rgba(70, 130, 215, 0.9);
 	box-shadow: 0 8px 22px rgba(8, 15, 28, 0.35);
 }
 .metric .label { color: var(--muted); font-size: 0.78rem; margin-bottom: 4px; }
@@ -424,15 +424,21 @@ input[type='number'] {
 
 #scenarioLeftSidebar { display: flex; flex-direction: column; gap: 16px; align-self: start; }
 #scenarioLeftSidebar .panel {
-	background: linear-gradient(145deg, rgba(255, 168, 122, 0.2), rgba(255, 255, 255, 0.05));
-	border-color: rgba(255, 169, 128, 0.45);
+	background: linear-gradient(145deg, rgba(132, 102, 232, 0.2), rgba(255, 255, 255, 0.05));
+	border-color: rgba(146, 118, 232, 0.45);
 }
 .button-row { display: grid; gap: 8px; padding: 14px 16px; }
 .scenario-buttons button { width: 100%; text-align: left; line-height: 1.45; }
-.scenario-buttons button,
+.scenario-buttons button {
+	background: linear-gradient(145deg, rgba(132, 102, 232, 0.22), rgba(255, 255, 255, 0.05));
+	border-color: rgba(146, 118, 232, 0.45);
+}
+
 .scenario-buttons button.active {
-	background: linear-gradient(145deg, rgba(255, 168, 122, 0.2), rgba(255, 255, 255, 0.05));
-	border-color: rgba(255, 169, 128, 0.45);
+	background: linear-gradient(145deg, rgba(76, 50, 146, 0.72), rgba(36, 27, 74, 0.78));
+	border-color: rgba(146, 118, 232, 0.9);
+	box-shadow: 0 8px 22px rgba(8, 15, 28, 0.35);
+	color: #ecfff6;
 }
 #scenarioStudyLeversPanel .study-control .control-header label {
 	font-size: 0.92rem;
@@ -455,8 +461,8 @@ input[type='number'] {
 	line-height: 1.05;
 	letter-spacing: -0.02em;
 	padding: 16px 18px;
-	background: linear-gradient(145deg, rgba(255, 168, 122, 0.2), rgba(255, 255, 255, 0.05));
-	border-bottom: 1px solid rgba(255, 169, 128, 0.35);
+	background: linear-gradient(145deg, rgba(132, 102, 232, 0.2), rgba(255, 255, 255, 0.05));
+	border-bottom: 1px solid rgba(146, 118, 232, 0.35);
 	border-left-color: var(--accent-warm-dark);
 }
 #scenarioBtnPanel .scenario-list-accordion > summary {
@@ -544,8 +550,8 @@ input[type='number'] {
 }
 
 #scenarioRightSidebar .delta-total-card {
-	background: linear-gradient(140deg, rgba(24, 86, 62, 0.5), rgba(14, 30, 58, 0.62));
-	border: 3px solid rgba(116, 236, 189, 0.9);
+	background: linear-gradient(140deg, rgba(14, 44, 92, 0.5), rgba(11, 25, 52, 0.62));
+	border: 3px solid rgba(70, 130, 215, 0.9);
 	box-shadow: 0 8px 22px rgba(8, 15, 28, 0.35);
 }
 
@@ -609,7 +615,7 @@ input[type='number'] {
 
 #scenarioRightSidebar .delta-row-bar.positive,
 #scenarioRightSidebar .delta-total-marker.positive {
-	background: linear-gradient(135deg, rgba(255, 140, 102, 0.88), rgba(255, 178, 136, 0.92));
+	background: linear-gradient(135deg, rgba(70, 130, 215, 0.88), rgba(112, 225, 255, 0.92));
 }
 
 #scenarioRightSidebar .delta-row-bar.negative,
@@ -625,7 +631,7 @@ input[type='number'] {
 
 #scenarioRightSidebar .delta-row-value.positive,
 #scenarioRightSidebar .delta-total-value.positive {
-	color: #ffb08b;
+	color: #9ad0ff;
 }
 
 #scenarioRightSidebar .delta-row-value.negative,
