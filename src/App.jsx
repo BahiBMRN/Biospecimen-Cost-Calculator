@@ -96,25 +96,71 @@ function formatCurrency(v) {
   }).format(Number(v));
 }
 
+function formatSignedCurrency(v) {
+  const numeric = Number(v);
+  if (numeric === 0) {
+    return formatCurrency(0);
+  }
+  return `${numeric > 0 ? '+' : '-'}${formatCurrency(Math.abs(numeric))}`;
+}
+
+function formatSignedPercent(v) {
+  if (!Number.isFinite(Number(v))) {
+    return 'N/A';
+  }
+
+  const numeric = Number(v);
+  if (numeric === 0) {
+    return '0.0%';
+  }
+
+  return `${numeric > 0 ? '+' : '-'}${Math.abs(numeric).toFixed(1)}%`;
+}
+
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
 function ceilDiv(a, b) {
-  return Math.ceil(Number(a) / Math.max(1, Number(b)));
+  return Math.ceil(Number(a) / Number(b));
 }
 
-function calculate(inputs) {
+export function calculate(inputs) {
   const N_samples = Number(inputs.N_subjects) * Number(inputs.N_visits) * Number(inputs.N_timepoints) * Number(inputs.N_aliquots);
+
+  if (N_samples <= 0) {
+    const segments = [
+      { label: 'Kitting & Site', value: 0, color: COLORS[0] },
+      { label: 'Logistics', value: 0, color: COLORS[1] },
+      { label: 'Testing', value: 0, color: COLORS[2] },
+      { label: 'Storage', value: 0, color: COLORS[3] },
+      { label: 'Disposal', value: 0, color: COLORS[4] },
+    ];
+
+    return {
+      C_sample: 0,
+      TRUE_COST: 0,
+      N_samples: 0,
+      totalShipmentsRequired: 0,
+      segments,
+      K: 0,
+      L: 0,
+      T: 0,
+      S: 0,
+      D: 0,
+    };
+  }
+
+  const samplesPerShipment = Number(inputs.N_samples_ship) > 0 ? Number(inputs.N_samples_ship) : 1;
   const K = Number(inputs.K_kit) + Number(inputs.K_site) + Number(inputs.K_special);
-  const L = (Number(inputs.L_ship) / Math.max(1, Number(inputs.N_samples_ship))) * Number(inputs.N_shipments) + Number(inputs.L_accession);
-  const T_data = Number(inputs.T_data_total) / Math.max(1, N_samples);
+  const L = (Number(inputs.L_ship) / samplesPerShipment) * Number(inputs.N_shipments) + Number(inputs.L_accession);
+  const T_data = Number(inputs.T_data_total) / N_samples;
   const T = Number(inputs.T_process) + Number(inputs.T_test) + T_data;
   const S = Number(inputs.S_setup) + Number(inputs.S_rate) * Number(inputs.S_duration);
   const D = Number(inputs.D_retrieve) + Number(inputs.D_destroy) + Number(inputs.D_doc);
   const C_sample = K + L + T + S + D;
   const TRUE_COST = C_sample * N_samples;
-  const totalShipmentsRequired = ceilDiv(N_samples, inputs.N_samples_ship) * Number(inputs.N_shipments);
+  const totalShipmentsRequired = ceilDiv(N_samples, samplesPerShipment) * Number(inputs.N_shipments);
   const segments = [
     { label: 'Kitting & Site', value: K, color: COLORS[0] },
     { label: 'Logistics', value: L, color: COLORS[1] },
@@ -150,7 +196,7 @@ function BreakdownChart({ segments }) {
         <ResponsiveContainer width="100%" height="100%" minWidth={260} minHeight={260}>
           <BarChart data={sorted} layout="vertical" margin={{ left: 12, right: 16, top: 8, bottom: 8 }}>
             <XAxis type="number" hide />
-            <YAxis type="category" dataKey="label" width={160} tick={{ fill: '#aeb9d6', fontSize: 24 }} />
+            <YAxis type="category" dataKey="label" width={160} tick={{ fill: '#aeb9d6', fontSize: 20 }} />
             <Tooltip
               formatter={(value) => formatCurrency(value)}
               cursor={false}
@@ -169,16 +215,87 @@ function BreakdownChart({ segments }) {
   );
 }
 
-function DeltaComparisonChart() {
+function DeltaComparisonChart({ baselineResult, scenarioResult }) {
+  const componentRows = [
+    { label: 'K', baseline: baselineResult.K, scenario: scenarioResult.K },
+    { label: 'L', baseline: baselineResult.L, scenario: scenarioResult.L },
+    { label: 'T', baseline: baselineResult.T, scenario: scenarioResult.T },
+    { label: 'S', baseline: baselineResult.S, scenario: scenarioResult.S },
+    { label: 'D', baseline: baselineResult.D, scenario: scenarioResult.D },
+  ].map((row) => ({
+    ...row,
+    delta: row.scenario - row.baseline,
+  }));
+
+  const componentDomainMax = Math.max(1, ...componentRows.map((row) => Math.abs(row.delta))) * 1.15;
+
+  const deltaTotal = scenarioResult.TRUE_COST - baselineResult.TRUE_COST;
+  const totalPercentDelta = baselineResult.TRUE_COST === 0 ? null : (deltaTotal / baselineResult.TRUE_COST) * 100;
+  const totalDomainMax = Math.max(1, Math.abs(deltaTotal)) * 1.15;
+
+  const getHalfWidthPercent = (value, domainMax) => {
+    if (!domainMax) {
+      return 0;
+    }
+
+    return Math.min(50, (Math.abs(value) / domainMax) * 50);
+  };
+
   return (
     <div className="chart-block delta-chart-block">
       <h3>Scenario Difference View</h3>
-      <div className="delta-placeholder">
-        <strong>Placeholder for future update</strong>
-        <p>
-          The difference graph is being redesigned for better readability and decision support.
-          A new version will be added in a later update.
-        </p>
+
+      <div className="delta-section">
+        <div className="delta-section-title">Per-Sample Cost Delta</div>
+        <div className="delta-rows">
+          {componentRows.map((row, index) => {
+            const barWidth = getHalfWidthPercent(row.delta, componentDomainMax);
+            const barStyle = row.delta >= 0
+              ? { left: '50%', width: `${barWidth}%` }
+              : { left: `${50 - barWidth}%`, width: `${barWidth}%` };
+
+            return (
+              <div
+                className="delta-row"
+                key={row.label}
+                data-testid={`delta-row-${index}`}
+                title={`Baseline ${formatCurrency(row.baseline)} | Scenario ${formatCurrency(row.scenario)} | Delta ${formatSignedCurrency(row.delta)}`}
+              >
+                <div className="delta-row-label">{row.label}</div>
+                <div className="delta-row-track">
+                  <div className="delta-row-zero" />
+                  {row.delta !== 0 && <div className={`delta-row-bar ${row.delta > 0 ? 'positive' : 'negative'}`} style={barStyle} />}
+                </div>
+                <div className={`delta-row-value ${row.delta > 0 ? 'positive' : row.delta < 0 ? 'negative' : 'neutral'}`}>
+                  {formatSignedCurrency(row.delta)}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="delta-total-card" data-testid="total-study-delta-card">
+        <div className="delta-section-title">Total Study Cost Delta</div>
+        <div className={`delta-total-value ${deltaTotal > 0 ? 'positive' : deltaTotal < 0 ? 'negative' : 'neutral'}`}>
+          {formatSignedCurrency(deltaTotal)}
+        </div>
+        <div className="delta-total-rail">
+          <div className="delta-row-zero" />
+          {deltaTotal !== 0 && (
+            <div
+              className={`delta-total-marker ${deltaTotal > 0 ? 'positive' : 'negative'}`}
+              style={
+                deltaTotal > 0
+                  ? { left: '50%', width: `${getHalfWidthPercent(deltaTotal, totalDomainMax)}%` }
+                  : { left: `${50 - getHalfWidthPercent(deltaTotal, totalDomainMax)}%`, width: `${getHalfWidthPercent(deltaTotal, totalDomainMax)}%` }
+              }
+            />
+          )}
+        </div>
+        <div className="delta-total-percent" data-testid="total-study-delta-percent">
+          {totalPercentDelta === null ? 'Percent delta unavailable at $0 baseline' : `${formatSignedPercent(totalPercentDelta)} Δ`}
+        </div>
       </div>
     </div>
   );
@@ -377,6 +494,19 @@ function App() {
     }));
   };
 
+  const updateScenarioValue = (key, rawValue) => {
+    const item = CONFIG.find((entry) => entry.key === key);
+    if (!item || Number.isNaN(rawValue)) {
+      return;
+    }
+
+    setActiveScenario(null);
+    setScenarioInputs((current) => ({
+      ...(current ?? lockedBaselineInputs),
+      [key]: clamp(rawValue, item.min, item.max),
+    }));
+  };
+
   const applyScenario = (scenario) => {
     setActiveScenario(scenario);
     setScenarioInputs({ ...lockedBaselineInputs, ...PRESETS[scenario] });
@@ -399,7 +529,15 @@ function App() {
   return (
     <div className="app">
       <nav className="tab-bar">
-        <div className="tab-bar-logo">
+        <a
+          className="tab-bar-logo"
+          href="#"
+          onClick={(event) => {
+            event.preventDefault();
+            setActiveTab('calculator');
+          }}
+          aria-label="Go to home"
+        >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" aria-hidden="true">
             <defs>
               <linearGradient id="tg" x1="0" y1="0" x2="1" y2="1">
@@ -411,7 +549,7 @@ function App() {
             <path d="M24 10h16v6h-2v16.5l10.2 15.8A6 6 0 0 1 43.2 58H20.8a6 6 0 0 1-5-9.7L26 32.5V16h-2v-6zm6 6v18.1l-10.1 15.6a2 2 0 0 0 1.7 3.3h20.8a2 2 0 0 0 1.7-3.3L34 34.1V16h-4z" fill="url(#tg)" />
           </svg>
           B$LCC
-        </div>
+        </a>
         <button className={activeTab === 'calculator' ? 'tab-btn active' : 'tab-btn'} onClick={() => setActiveTab('calculator')}>
           Calculator
         </button>
@@ -431,7 +569,7 @@ function App() {
             <p className="sub">
               {activeTab === 'calculator'
                 ? 'This calculator models the cost of biospecimen collections for the lifetime of the study. Adjust the below parameters to view cost impacts in real time.'
-                : 'Scenario modeling is read-only. Select a predefined scenario to compare against locked baseline values, then use Calculator to change sample variables.'}
+                : 'Scenario modeling starts from the locked baseline. Select a predefined scenario or fine-tune study and sample levers to model custom outcomes.'}
             </p>
           </section>
 
@@ -463,20 +601,36 @@ function App() {
             ) : (
               <aside id="scenarioLeftSidebar">
                 <div className="panel" id="scenarioBtnPanel">
-                  <div className="head">
-                    <h2 className="scenario-heading">Scenarios</h2>
-                    <button className="reset-scenario-btn" onClick={resetScenarioToLocked}>Reset</button>
-                  </div>
-                  <div className="button-row scenario-buttons">
-                    {Object.keys(SCENARIO_LABELS).map((scenario) => (
-                      <button
-                        key={scenario}
-                        className={activeScenario === scenario ? 'active' : ''}
-                        onClick={() => applyScenario(scenario)}
-                      >
-                        {SCENARIO_LABELS[scenario]}
-                      </button>
-                    ))}
+                  <div className="controls">
+                    <details className="accordion scenario-list-accordion" open>
+                      <summary>
+                        <span className="scenario-heading">Scenarios</span>
+                        <button
+                          type="button"
+                          className="reset-scenario-btn"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            resetScenarioToLocked();
+                          }}
+                        >
+                          Reset
+                        </button>
+                      </summary>
+                      <div className="accordion-content">
+                        <div className="button-row scenario-buttons">
+                          {Object.keys(SCENARIO_LABELS).map((scenario) => (
+                            <button
+                              key={scenario}
+                              className={activeScenario === scenario ? 'active' : ''}
+                              onClick={() => applyScenario(scenario)}
+                            >
+                              {SCENARIO_LABELS[scenario]}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </details>
                   </div>
                 </div>
                 <div className="panel" id="scenarioStudyLeversPanel">
@@ -489,9 +643,7 @@ function App() {
                             key={item.key}
                             item={item}
                             value={effectiveScenarioInputs[item.key]}
-                            onChange={updateCalculatorValue}
-                            disabled
-                            lockHint="To Change Variables Use Calculator"
+                            onChange={updateScenarioValue}
                           />
                         ))}
                       </div>
@@ -512,10 +664,8 @@ function App() {
                                   key={item.key}
                                   item={item}
                                   value={effectiveScenarioInputs[item.key]}
-                                  onChange={updateCalculatorValue}
+                                  onChange={updateScenarioValue}
                                   withSlider
-                                  disabled
-                                  lockHint="To Change Variables Use Calculator"
                                 />
                               ))}
                             </div>
@@ -563,16 +713,18 @@ function App() {
                       {activeScenario ? (
                         <>
                           <div className="assump-title">Scenario Assumptions: {SCENARIO_LABELS[activeScenario]}</div>
-                          <div className="mini dim">Scenario values are applied on top of the locked baseline. Sample Levers remain read-only here.</div>
+                          <div className="mini dim">Scenario values are applied on top of the locked baseline. Fine-tuning any lever switches this panel to custom dynamic values.</div>
                           <div className="mini"><strong>Changes:</strong> {SCENARIO_META[activeScenario].changes.join(' | ')}</div>
                           <div className="mini"><strong>Unchanged:</strong> {SCENARIO_META[activeScenario].constants.join(' | ')}</div>
                         </>
                       ) : (
                         <>
-                          <div className="assump-title">No Scenario Applied</div>
-                          <div className="mini dim">Values currently match the locked baseline. Select a scenario to model changes, or use Reset to return here.</div>
-                          <div className="mini"><strong>Locked mode:</strong> Sample and study variables are read-only in What-If Scenarios.</div>
-                          <div className="mini">Use Calculator to change baseline values, then lock again. Top card is locked baseline and bottom card is scenario output.</div>
+                          <div className="assump-title">Custom Scenario Comparison</div>
+                          <div className="mini dim">This view reflects the current scenario lever values in real time. Click a preset button to return to preset assumptions.</div>
+                          <div className="mini"><strong>Formula:</strong> C_sample = K + L + T + S + D</div>
+                          <div className="mini">
+                            <strong>Current values:</strong> K({formatCurrency(scenarioResult.K)}) + L({formatCurrency(scenarioResult.L)}) + T({formatCurrency(scenarioResult.T)}) + S({formatCurrency(scenarioResult.S)}) + D({formatCurrency(scenarioResult.D)}) = {formatCurrency(scenarioResult.C_sample)}
+                          </div>
                         </>
                       )}
                     </section>
