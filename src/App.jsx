@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Bar,
   BarChart,
@@ -58,9 +58,9 @@ const PRESETS = {
 
 const SCENARIO_LABELS = {
   s1: 'Direct to Central Lab -> Single Analysis, No Residuals, No LTS',
-  s2: 'Direct to Central Lab Analysis -> Residual LTS (5 Year Consent)',
-  s3: 'Direct to Central Lab -> Specialty Lab Testing -> Residual LTS (5 Year Consent)',
-  s4: 'LTS Only: No CL Routing, No Analysis (5 Year Consent)',
+  s2: 'Direct to Central Lab Analysis -> Residual LTS (25 Year Consent)',
+  s3: 'Direct to Central Lab -> Specialty Lab Testing -> Residual LTS (25 Year Consent)',
+  s4: 'LTS Only: No CL Routing, No Analysis (25 Year Consent)',
 };
 
 const SCENARIO_META = {
@@ -150,7 +150,7 @@ function BreakdownChart({ segments }) {
         <ResponsiveContainer width="100%" height="100%" minWidth={260} minHeight={260}>
           <BarChart data={sorted} layout="vertical" margin={{ left: 12, right: 16, top: 8, bottom: 8 }}>
             <XAxis type="number" hide />
-            <YAxis type="category" dataKey="label" width={110} tick={{ fill: '#aeb9d6', fontSize: 12 }} />
+            <YAxis type="category" dataKey="label" width={160} tick={{ fill: '#aeb9d6', fontSize: 24 }} />
             <Tooltip
               formatter={(value) => formatCurrency(value)}
               cursor={false}
@@ -169,16 +169,39 @@ function BreakdownChart({ segments }) {
   );
 }
 
-function CostComposition({ result }) {
+function DeltaComparisonChart() {
+  return (
+    <div className="chart-block delta-chart-block">
+      <h3>Scenario Difference View</h3>
+      <div className="delta-placeholder">
+        <strong>Placeholder for future update</strong>
+        <p>
+          The difference graph is being redesigned for better readability and decision support.
+          A new version will be added in a later update.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function CostComposition({ result, variant = 'default', showLockButton = false, onLockIn }) {
   const pieData = result.segments.map((segment) => ({
     ...segment,
     percent: (segment.value / (result.C_sample || 1)) * 100,
   }));
 
+  const variantMap = {
+    locked: { className: 'locked-composition', badge: 'Locked Baseline' },
+    scenario: { className: 'scenario-composition', badge: 'Scenario Output' },
+    default: { className: '', badge: '' },
+  };
+  const styleVariant = variantMap[variant] || variantMap.default;
+
   return (
-    <section className="panel result-card">
+    <section className={`panel result-card ${styleVariant.className}`}>
       <div className="result-grid">
         <div>
+          {styleVariant.badge && <div className="composition-badge">{styleVariant.badge}</div>}
           <div className="score-label">Cost per sample</div>
           <h2 className="score-value">{formatCurrency(result.C_sample)}</h2>
           <p className="equation-line">
@@ -203,10 +226,15 @@ function CostComposition({ result }) {
             With {formatNumber(result.N_samples)} total samples, this study needs {formatNumber(result.totalShipmentsRequired)} shipments.
           </p>
           <p>Total study cost: {formatCurrency(result.TRUE_COST)}</p>
+          {showLockButton && (
+            <button className="interpretation-lock-btn" onClick={onLockIn}>
+              Lock Cost In For Scenario Modeling
+            </button>
+          )}
         </div>
       </div>
       <div className="metrics">
-        <div className="metric">
+        <div className="metric metric-important">
           <div className="label">Total study cost</div>
           <div className="big">{formatCurrency(result.TRUE_COST)}</div>
         </div>
@@ -227,9 +255,11 @@ function CostComposition({ result }) {
   );
 }
 
-function NumberControl({ item, value, onChange, withSlider }) {
+function NumberControl({ item, value, onChange, withSlider, disabled = false, lockHint = '' }) {
+  const controlTitle = disabled ? lockHint : undefined;
+
   return (
-    <div className={`control ${withSlider ? '' : 'study-control'}`}>
+    <div className={`control ${withSlider ? '' : 'study-control'} ${disabled ? 'is-locked' : ''}`}>
       <div className="control-header">
         <label htmlFor={item.key}>{item.label}</label>
         <div className="control-input-group">
@@ -240,7 +270,13 @@ function NumberControl({ item, value, onChange, withSlider }) {
             step={item.step}
             min={item.min}
             max={item.max}
-            onChange={(event) => onChange(item.key, Number(event.target.value))}
+            disabled={disabled}
+            title={controlTitle}
+            onChange={(event) => {
+              if (!disabled) {
+                onChange(item.key, Number(event.target.value));
+              }
+            }}
           />
         </div>
       </div>
@@ -252,7 +288,13 @@ function NumberControl({ item, value, onChange, withSlider }) {
           max={item.max}
           step={item.step}
           value={value}
-          onChange={(event) => onChange(item.key, Number(event.target.value))}
+          disabled={disabled}
+          title={controlTitle}
+          onChange={(event) => {
+            if (!disabled) {
+              onChange(item.key, Number(event.target.value));
+            }
+          }}
         />
       )}
     </div>
@@ -284,8 +326,11 @@ function categoryClass(group) {
 
 function App() {
   const [activeTab, setActiveTab] = useState('calculator');
-  const [state, setState] = useState({ ...DEFAULTS, ...PRESETS.s1 });
-  const [activeScenario, setActiveScenario] = useState('s1');
+  const [calculatorInputs, setCalculatorInputs] = useState({ ...DEFAULTS, ...PRESETS.s1 });
+  const [lockedInputs, setLockedInputs] = useState(null);
+  const [scenarioInputs, setScenarioInputs] = useState(null);
+  const [activeScenario, setActiveScenario] = useState(null);
+  const [isScenarioLocked, setIsScenarioLocked] = useState(false);
 
   const volumeItems = useMemo(() => CONFIG.filter((item) => item.category === 'Volume'), []);
   const costGroups = useMemo(() => {
@@ -296,15 +341,37 @@ function App() {
     }));
   }, []);
 
-  const result = useMemo(() => calculate(state), [state]);
+  const lockedBaselineInputs = useMemo(() => lockedInputs ?? calculatorInputs, [lockedInputs, calculatorInputs]);
+  const effectiveScenarioInputs = useMemo(() => scenarioInputs ?? lockedBaselineInputs, [scenarioInputs, lockedBaselineInputs]);
 
-  const updateValue = (key, rawValue) => {
+  const calculatorResult = useMemo(() => calculate(calculatorInputs), [calculatorInputs]);
+  const lockedResult = useMemo(() => calculate(lockedBaselineInputs), [lockedBaselineInputs]);
+  const scenarioResult = useMemo(() => calculate(effectiveScenarioInputs), [effectiveScenarioInputs]);
+
+  useEffect(() => {
+    if (activeTab !== 'scenarios') {
+      return;
+    }
+
+    if (!lockedInputs) {
+      const baseline = { ...calculatorInputs };
+      setLockedInputs(baseline);
+      setScenarioInputs(baseline);
+      return;
+    }
+
+    if (!scenarioInputs) {
+      setScenarioInputs({ ...lockedInputs });
+    }
+  }, [activeTab, calculatorInputs, lockedInputs, scenarioInputs]);
+
+  const updateCalculatorValue = (key, rawValue) => {
     const item = CONFIG.find((entry) => entry.key === key);
     if (!item || Number.isNaN(rawValue)) {
       return;
     }
 
-    setState((current) => ({
+    setCalculatorInputs((current) => ({
       ...current,
       [key]: clamp(rawValue, item.min, item.max),
     }));
@@ -312,7 +379,21 @@ function App() {
 
   const applyScenario = (scenario) => {
     setActiveScenario(scenario);
-    setState((current) => ({ ...current, ...PRESETS[scenario] }));
+    setScenarioInputs({ ...lockedBaselineInputs, ...PRESETS[scenario] });
+  };
+
+  const resetScenarioToLocked = () => {
+    setScenarioInputs({ ...lockedBaselineInputs });
+    setActiveScenario(null);
+  };
+
+  const lockCostForScenarioModeling = () => {
+    const baseline = { ...calculatorInputs };
+    setLockedInputs(baseline);
+    setScenarioInputs(baseline);
+    setActiveScenario(null);
+    setIsScenarioLocked(true);
+    setActiveTab('scenarios');
   };
 
   return (
@@ -350,7 +431,7 @@ function App() {
             <p className="sub">
               {activeTab === 'calculator'
                 ? 'This calculator models the cost of biospecimen collections for the lifetime of the study. Adjust the below parameters to view cost impacts in real time.'
-                : 'Select a predefined lifecycle scenario to instantly populate the calculator with representative parameters. Adjust any lever to fine-tune in real time.'}
+                : 'Scenario modeling is read-only. Select a predefined scenario to compare against locked baseline values, then use Calculator to change sample variables.'}
             </p>
           </section>
 
@@ -366,7 +447,7 @@ function App() {
                       <summary>{groupObj.group}</summary>
                       <div className="accordion-content">
                         {groupObj.items.map((item) => (
-                          <NumberControl key={item.key} item={item} value={state[item.key]} onChange={updateValue} withSlider />
+                          <NumberControl key={item.key} item={item} value={calculatorInputs[item.key]} onChange={updateCalculatorValue} withSlider />
                         ))}
                       </div>
                     </details>
@@ -384,6 +465,7 @@ function App() {
                 <div className="panel" id="scenarioBtnPanel">
                   <div className="head">
                     <h2 className="scenario-heading">Scenarios</h2>
+                    <button className="reset-scenario-btn" onClick={resetScenarioToLocked}>Reset</button>
                   </div>
                   <div className="button-row scenario-buttons">
                     {Object.keys(SCENARIO_LABELS).map((scenario) => (
@@ -397,65 +479,114 @@ function App() {
                     ))}
                   </div>
                 </div>
-                <div className="panel">
-                  <div className="head">
-                    <h2 className="lever-heading">Sample Levers</h2>
-                  </div>
+                <div className="panel" id="scenarioStudyLeversPanel">
                   <div className="controls">
-                    {costGroups.map((groupObj) => (
-                      <details className={`accordion cat-${categoryClass(groupObj.group)}`} key={groupObj.group}>
-                        <summary>{groupObj.group}</summary>
-                        <div className="accordion-content">
-                          {groupObj.items.map((item) => (
-                            <NumberControl key={item.key} item={item} value={state[item.key]} onChange={updateValue} withSlider />
-                          ))}
-                        </div>
-                      </details>
-                    ))}
+                    <details className="accordion scenario-study-levers">
+                      <summary>Study Levers</summary>
+                      <div className="accordion-content volume-grid">
+                        {volumeItems.map((item) => (
+                          <NumberControl
+                            key={item.key}
+                            item={item}
+                            value={effectiveScenarioInputs[item.key]}
+                            onChange={updateCalculatorValue}
+                            disabled
+                            lockHint="To Change Variables Use Calculator"
+                          />
+                        ))}
+                      </div>
+                    </details>
+                  </div>
+                </div>
+                <div className="panel" id="scenarioSampleLeversPanel">
+                  <div className="controls">
+                    <details className="accordion scenario-sample-levers" open>
+                      <summary>Sample Levers</summary>
+                      <div className="accordion-content">
+                        {costGroups.map((groupObj) => (
+                          <details className={`accordion cat-${categoryClass(groupObj.group)}`} key={groupObj.group}>
+                            <summary>{groupObj.group}</summary>
+                            <div className="accordion-content">
+                              {groupObj.items.map((item) => (
+                                <NumberControl
+                                  key={item.key}
+                                  item={item}
+                                  value={effectiveScenarioInputs[item.key]}
+                                  onChange={updateCalculatorValue}
+                                  withSlider
+                                  disabled
+                                  lockHint="To Change Variables Use Calculator"
+                                />
+                              ))}
+                            </div>
+                          </details>
+                        ))}
+                      </div>
+                    </details>
                   </div>
                 </div>
               </aside>
             )}
 
             <main className="main-grid">
-              <section className="panel">
-                <div className="head">
-                  <h3 className="lever-heading">Study Levers</h3>
-                </div>
-                <div className="controls volume-grid">
-                  {volumeItems.map((item) => (
-                    <NumberControl key={item.key} item={item} value={state[item.key]} onChange={updateValue} />
-                  ))}
-                </div>
-              </section>
+              {activeTab === 'calculator' && (
+                <section className="panel">
+                  <div className="head">
+                    <h3 className="lever-heading">Study Levers</h3>
+                  </div>
+                  <div className="controls volume-grid">
+                    {volumeItems.map((item) => (
+                      <NumberControl
+                        key={item.key}
+                        item={item}
+                        value={calculatorInputs[item.key]}
+                        onChange={updateCalculatorValue}
+                        lockHint="To Change Variables Use Calculator"
+                      />
+                    ))}
+                  </div>
+                </section>
+              )}
 
-              <CostComposition result={result} />
-              <section className="panel">
-                <BreakdownChart segments={result.segments} />
-              </section>
+              {activeTab === 'calculator' ? (
+                <>
+                  <CostComposition result={calculatorResult} showLockButton onLockIn={lockCostForScenarioModeling} />
+                  <section className="panel">
+                    <BreakdownChart segments={calculatorResult.segments} />
+                  </section>
+                </>
+              ) : (
+                <>
+                  <div className="scenario-results-stack">
+                    <CostComposition result={lockedResult} variant="locked" />
+                    <section className="panel scenario-assumptions-panel assumptions assumptions-compact">
+                      {activeScenario ? (
+                        <>
+                          <div className="assump-title">Scenario Assumptions: {SCENARIO_LABELS[activeScenario]}</div>
+                          <div className="mini dim">Scenario values are applied on top of the locked baseline. Sample Levers remain read-only here.</div>
+                          <div className="mini"><strong>Changes:</strong> {SCENARIO_META[activeScenario].changes.join(' | ')}</div>
+                          <div className="mini"><strong>Unchanged:</strong> {SCENARIO_META[activeScenario].constants.join(' | ')}</div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="assump-title">No Scenario Applied</div>
+                          <div className="mini dim">Values currently match the locked baseline. Select a scenario to model changes, or use Reset to return here.</div>
+                          <div className="mini"><strong>Locked mode:</strong> Sample and study variables are read-only in What-If Scenarios.</div>
+                          <div className="mini">Use Calculator to change baseline values, then lock again. Top card is locked baseline and bottom card is scenario output.</div>
+                        </>
+                      )}
+                    </section>
+                    <CostComposition result={scenarioResult} variant="scenario" />
+                  </div>
+                </>
+              )}
             </main>
 
             {activeTab === 'scenarios' && (
-              <aside className="panel sidebar scenario-panel" id="scenarioRightSidebar">
-                <div className="head">
-                  <h3 className="assumptions-heading">Assumptions</h3>
-                </div>
-                <div className="controls assumptions">
-                  <div className="assump-title">{SCENARIO_LABELS[activeScenario]}</div>
-                  <div className="mini dim">Scenario sets the values listed below. Everything else remains as configured in Sample Levers.</div>
-                  <div className="mini"><strong>What changes when selected</strong></div>
-                  <ul>
-                    {SCENARIO_META[activeScenario].changes.map((row) => (
-                      <li key={row}>{row}</li>
-                    ))}
-                  </ul>
-                  <div className="mini"><strong>What does not change</strong></div>
-                  <ul className="dim">
-                    {SCENARIO_META[activeScenario].constants.map((row) => (
-                      <li key={row}>{row}</li>
-                    ))}
-                  </ul>
-                </div>
+              <aside id="scenarioRightSidebar">
+                <section className="panel">
+                  <DeltaComparisonChart baselineResult={lockedResult} scenarioResult={scenarioResult} />
+                </section>
               </aside>
             )}
           </div>
