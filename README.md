@@ -6,7 +6,7 @@ B$LCC is an interactive browser application for modeling biospecimen study cost 
 
 - Name: B$LCC (Biospecimen Study Lifetime Cost Calculator)
 - Package: `codespaces-react`
-- Primary use case: protocol and logistics cost planning for biospecimen studies
+- Primary use case: Modeling costs of clinical biospecimen collections individually and through the life of the study
 - Primary users: clinical operations, biospecimen program leads, and study planning/finance stakeholders
 
 ## What the App Does
