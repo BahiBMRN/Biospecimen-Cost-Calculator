@@ -1,70 +1,85 @@
-# GitHub Codespaces ♥️ React
+# Biospecimen Study Lifetime Cost Calculator (B$LCC)
 
-Welcome to your shiny new Codespace running React! We've got everything fired up and running for you to explore React.
+B$LCC is an interactive browser application for modeling biospecimen study cost across the full lifecycle. Users adjust operational and financial levers, then review per-sample and total-study impact in real time.
 
-You've got a blank canvas to work on from a git perspective as well. There's a single initial commit with the what you're seeing right now - where you go from here is up to you!
+## Application Summary
 
-Everything you do here is contained within this one codespace. There is no repository on GitHub yet. If and when you’re ready you can click "Publish Branch" and we’ll create your repository and push up your project. If you were just exploring then and have no further need for this code then you can simply delete your codespace and it's gone forever.
+- Name: B$LCC (Biospecimen Study Lifetime Cost Calculator)
+- Package: `codespaces-react`
+- Primary use case: protocol and logistics cost planning for biospecimen studies
+- Primary users: clinical operations, biospecimen program leads, and study planning/finance stakeholders
 
-This project was bootstrapped for you with [Vite](https://vitejs.dev/).
+## What the App Does
 
-## Available Scripts
+The model computes:
 
-In the project directory, you can run:
+1. Per-sample cost (`C_sample`)
+2. Total study cost (`TRUE_COST`)
+3. Total sample volume (`N_samples`)
+4. Total shipments required
+5. Cost component values for K, L, T, S, and D
 
-### `npm start`
+Cost formulas:
 
-We've already run this for you in the `Codespaces: server` terminal window below. If you need to stop the server for any reason you can just run `npm start` again to bring it back online.
+- `N_samples = N_subjects * N_visits * N_timepoints * N_aliquots`
+- `C_sample = K + L + T + S + D`
+- `TRUE_COST = C_sample * N_samples`
 
-Runs the app in the development mode.\
-Open [http://localhost:3000/](http://localhost:3000/) in the built-in Simple Browser (`Cmd/Ctrl + Shift + P > Simple Browser: Show`) to view your running application.
+Input model includes 20 configurable levers grouped by:
 
-The page will reload automatically when you make changes.\
-You may also see any lint errors in the console.
+- Volume
+- Kitting & Site
+- Logistics
+- Testing
+- Storage
+- Disposal
 
-### `npm test`
+## Product Workflow
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Calculator
 
-### `npm run build`
+- Interactive levers update outputs instantly.
+- Donut and bar visualizations show cost composition and top drivers.
+- Users can lock the current configuration as a baseline.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### What-If Scenarios
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- Presets (`s1` to `s4`) apply scenario overlays to the locked baseline.
+- Manual edits are supported and transition the assumptions panel to custom mode.
+- Reset returns scenario values to the locked baseline.
+- Delta visualization includes:
+	- Per-sample K/L/T/S/D deltas
+	- Total-study delta with signed percent handling, including zero-baseline guard
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Store or Dispose
 
-## Learn More
+- Present as a placeholder module marked "Soon".
 
-You can learn more in the [Vite documentation](https://vitejs.dev/guide/).
+## Technical Stack and Setup
 
-To learn Vitest, a Vite-native testing framework, go to [Vitest documentation](https://vitest.dev/guide/)
+### Stack
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- React 18
+- Vite 6
+- Recharts 3
+- JavaScript/JSX (no TypeScript)
+- Vitest, Testing Library, jsdom
 
-### Code Splitting
+### Architecture Notes
 
-This section has moved here: [https://sambitsahoo.com/blog/vite-code-splitting-that-works.html](https://sambitsahoo.com/blog/vite-code-splitting-that-works.html)
+- Client-side SPA with static build output
+- No backend or external API integrations
+- In-memory React state only (`calculatorInputs`, `lockedInputs`, `scenarioInputs`, `activeScenario`)
+- No persistence layer (no database, queue, or local storage) [Coming Later]
 
-### Analyzing the Bundle Size
+## Quality and Current State
 
-This section has moved here: [https://github.com/btd/rollup-plugin-visualizer#rollup-plugin-visualizer](https://github.com/btd/rollup-plugin-visualizer#rollup-plugin-visualizer)
+- Current maturity: advanced MVP with robust scenario workflow
+- Automated tests: scenario and delta behaviors are covered
+- Implementation concentration: primary model and UI logic are currently centralized in one main component
 
-### Making a Progressive Web App
+## Code Locations
 
-This section has moved here: [https://dev.to/hamdankhan364/simplifying-progressive-web-app-pwa-development-with-vite-a-beginners-guide-38cf](https://dev.to/hamdankhan364/simplifying-progressive-web-app-pwa-development-with-vite-a-beginners-guide-38cf)
-
-### Advanced Configuration
-
-This section has moved here: [https://vitejs.dev/guide/build.html#advanced-base-options](https://vitejs.dev/guide/build.html#advanced-base-options)
-
-### Deployment
-
-This section has moved here: [https://vitejs.dev/guide/build.html](https://vitejs.dev/guide/build.html)
-
-### Troubleshooting
-
-This section has moved here: [https://vitejs.dev/guide/troubleshooting.html](https://vitejs.dev/guide/troubleshooting.html)
+- `src/App.jsx`: model formulas, scenario logic, and application flow
+- `src/App.css`: layout, theming, and component styling
+- `src/App.test.jsx`: behavior tests for calculator, scenarios, and edge cases
