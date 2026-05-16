@@ -1,23 +1,23 @@
 # Biospecimen Study Lifetime Cost Calculator (B$LCC)
 
-B$LCC is an interactive browser application for modeling biospecimen study cost across the full lifecycle. Users adjust operational and financial levers, then review per-sample and total-study impact in real time.
+B$LCC is an interactive browser application for modeling biospecimen costs across the study lifecycle. Users adjust operational and financial levers to view per-sample and total-study impact in real time.
 
 ## Application Summary
 
 - Name: B$LCC (Biospecimen Study Lifetime Cost Calculator)
 - Package: `codespaces-react`
-- Primary use case: Modeling costs of clinical biospecimen collections individually and through the life of the study
-- Primary users: clinical operations, biospecimen program leads, and study planning/finance stakeholders
+- Primary use case: Modeling costs of clinical biospecimen collections individually and for the life of the study
+- Primary users: CLBM, GDO, clinical study design decision-makers, clinical study implementation stakeholders
 
 ## What the App Does
 
 The model computes:
 
-1. Per-sample cost (`C_sample`)
-2. Total study cost (`TRUE_COST`)
-3. Total sample volume (`N_samples`)
+1. End-to-end per-sample cost (`C_sample`)
+2. Total sample volume (`N_samples`)
+3. Total cost for study (`TRUE_COST`)
 4. Total shipments required
-5. Cost component values for K, L, T, S, and D
+5. Cost component values for Kitting & Site (K), Logistics (L), Testing (T), Storage (S), and Disposal (D)
 
 Cost formulas:
 
@@ -27,14 +27,13 @@ Cost formulas:
 
 Input model includes 20 configurable levers grouped by:
 
-- Volume
 - Kitting & Site
 - Logistics
 - Testing
 - Storage
 - Disposal
 
-## Product Workflow
+## App Workflow
 
 ### Calculator
 
@@ -53,7 +52,7 @@ Input model includes 20 configurable levers grouped by:
 
 ### Store or Dispose
 
-- Present as a placeholder module marked "Soon".
+- Upcoming Module
 
 ## Technical Stack and Setup
 
@@ -63,7 +62,6 @@ Input model includes 20 configurable levers grouped by:
 - Vite 6
 - Recharts 3
 - JavaScript/JSX (no TypeScript)
-- Vitest, Testing Library, jsdom
 
 ### Architecture Notes
 
@@ -82,4 +80,3 @@ Input model includes 20 configurable levers grouped by:
 
 - `src/App.jsx`: model formulas, scenario logic, and application flow
 - `src/App.css`: layout, theming, and component styling
-- `src/App.test.jsx`: behavior tests for calculator, scenarios, and edge cases
