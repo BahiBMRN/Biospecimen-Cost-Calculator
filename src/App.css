@@ -136,6 +136,17 @@ body {
 }
 
 h1 { margin: 0 0 10px; font-size: clamp(2.2rem, 4vw, 3.2rem); line-height: 1; letter-spacing: -0.04em; }
+.hero-dot {
+	display: inline-block;
+	width: 9px;
+	height: 9px;
+	border-radius: 50%;
+	background: linear-gradient(135deg, var(--accent), var(--accent-2));
+	box-shadow: 0 0 6px 2px rgba(112, 225, 255, 0.55), 0 0 12px 4px rgba(154, 124, 255, 0.3);
+	margin-right: 10px;
+	vertical-align: middle;
+	flex-shrink: 0;
+}
 .sub { margin: 0; color: var(--muted); font-size: 1rem; line-height: 1.6; }
 
 .layout { display: grid; grid-template-columns: 360px 1fr; gap: 22px; margin-top: 22px; }
@@ -361,14 +372,34 @@ input[type='number'] {
 .interpretation-lock-btn {
 	margin-top: 10px;
 	width: 100%;
+	font-size: 1.05rem; /* ← tweak lock-in button text size here */
 	font-weight: 700;
 	line-height: 1.3;
 	background: linear-gradient(145deg, rgba(132, 102, 232, 0.35), rgba(98, 75, 186, 0.18));
 	border-color: rgba(146, 118, 232, 0.55);
 }
 
+.interpretation-calc-layout {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 12px;
+	align-items: stretch;
+}
+
+.interpretation-calc-layout .interpretation-lock-btn {
+	width: 100%;
+	height: 100%;
+	margin-top: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	padding: 10px 8px;
+}
+
 .composition-badge {
 	display: inline-block;
+	align-self: flex-start;
 	margin-bottom: 6px;
 	padding: 4px 10px;
 	border-radius: 999px;
@@ -379,6 +410,10 @@ input[type='number'] {
 	border: 1px solid rgba(255, 255, 255, 0.25);
 	background: rgba(255, 255, 255, 0.08);
 	color: #f3f6ff;
+}
+
+.result-card-badge-row {
+	padding: 12px 14px 0;
 }
 
 .locked-composition {
@@ -408,6 +443,10 @@ input[type='number'] {
 	background: linear-gradient(140deg, rgba(14, 44, 92, 0.5), rgba(11, 25, 52, 0.62));
 	border: 3px solid rgba(70, 130, 215, 0.9);
 	box-shadow: 0 8px 22px rgba(8, 15, 28, 0.35);
+}
+.metric.metric-important:not(.metric-important--cps) {
+	background: linear-gradient(140deg, rgba(237, 3, 124, 0.18), rgba(160, 2, 84, 0.08));
+	border: 3px solid #ed037c;
 }
 .metric .label { color: var(--muted); font-size: 0.78rem; margin-bottom: 4px; }
 .metric .big { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.03em; }
@@ -485,11 +524,11 @@ input[type='number'] {
 
 .assumptions-compact .assump-title {
 	margin-bottom: 2px;
-	font-size: 1rem;
+	font-size: 1.5rem;
 }
 
 .assumptions-compact .mini {
-	font-size: 0.87rem;
+	font-size: 1.37rem;
 	line-height: 1.35;
 }
 
@@ -549,9 +588,15 @@ input[type='number'] {
 	background: rgba(255, 255, 255, 0.04);
 }
 
-#scenarioRightSidebar .delta-total-card {
+#scenarioRightSidebar .delta-section {
 	background: linear-gradient(140deg, rgba(14, 44, 92, 0.5), rgba(11, 25, 52, 0.62));
 	border: 3px solid rgba(70, 130, 215, 0.9);
+	box-shadow: 0 8px 22px rgba(8, 15, 28, 0.35);
+}
+
+#scenarioRightSidebar .delta-total-card {
+	background: linear-gradient(140deg, rgba(237, 3, 124, 0.18), rgba(160, 2, 84, 0.08));
+	border: 3px solid #ed037c;
 	box-shadow: 0 8px 22px rgba(8, 15, 28, 0.35);
 }
 
@@ -560,7 +605,7 @@ input[type='number'] {
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
 	color: #f3f7ff;
-	font-weight: 800;
+	font-weight: 500;
 	margin-bottom: 8px;
 }
 
@@ -615,7 +660,7 @@ input[type='number'] {
 
 #scenarioRightSidebar .delta-row-bar.positive,
 #scenarioRightSidebar .delta-total-marker.positive {
-	background: linear-gradient(135deg, rgba(70, 130, 215, 0.88), rgba(112, 225, 255, 0.92));
+	background: linear-gradient(135deg, rgba(220, 50, 50, 0.88), rgba(255, 100, 100, 0.92));
 }
 
 #scenarioRightSidebar .delta-row-bar.negative,
@@ -631,7 +676,7 @@ input[type='number'] {
 
 #scenarioRightSidebar .delta-row-value.positive,
 #scenarioRightSidebar .delta-total-value.positive {
-	color: #9ad0ff;
+	color: #ff9090;
 }
 
 #scenarioRightSidebar .delta-row-value.negative,
@@ -646,7 +691,7 @@ input[type='number'] {
 
 #scenarioRightSidebar .delta-total-value {
 	font-size: 1.9rem;
-	font-weight: 800;
+	font-weight: 500;
 	letter-spacing: -0.02em;
 	line-height: 1.1;
 	padding: 10px 0;
@@ -655,7 +700,7 @@ input[type='number'] {
 #scenarioRightSidebar .delta-total-percent {
 	margin-top: 8px;
 	font-size: 1.5rem;
-	font-weight: 700;
+	font-weight: 500;
 	color: #eef3ff;
 }
 
@@ -682,4 +727,86 @@ input[type='number'] {
 @media (max-width: 640px) {
 	.shell { padding: 16px; }
 	.hero, .result-card { padding: 18px; }
+}
+
+/* ── Calculator result card: 2-column grid (no donut column) ── */
+.result-grid--calculator {
+	grid-template-columns: 1fr 1fr;
+	align-items: stretch;
+}
+
+.result-grid--calculator > .interpretation {
+	grid-column: auto;
+	justify-self: stretch;
+}
+
+.score-box {
+	background: linear-gradient(140deg, rgba(237, 3, 124, 0.18), rgba(160, 2, 84, 0.08));
+	border: 3px solid #ed037c;
+	box-shadow: 0 8px 22px rgba(8, 15, 28, 0.35);
+	border-radius: 16px;
+	padding: 12px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+.score-box--blue {
+	background: linear-gradient(140deg, rgba(14, 44, 92, 0.5), rgba(11, 25, 52, 0.62));
+	border: 3px solid rgba(70, 130, 215, 0.9);
+	box-shadow: 0 8px 22px rgba(8, 15, 28, 0.35);
+	border-radius: 16px;
+	padding: 16px;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	min-width: 0;
+	min-height: 145px;
+	overflow: hidden;
+	container-type: inline-size;
+}
+
+.score-box--blue .score-value {
+	font-size: clamp(2rem, 22cqi, 4.2rem);
+	white-space: nowrap;
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+}
+
+/* ── Study-total equation inside interpretation box ── */
+.study-equation {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	font-size: 0.88rem;
+	line-height: 1.4;
+}
+
+/* ── Cost Per Sample metric-important (calculator view only) ── */
+.metric-important--cps {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.cps-label-stack {
+	display: flex;
+	flex-direction: column;
+	font-size: 0.72rem;
+	line-height: 1.3;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: #ecfff6;
+	flex-shrink: 0;
+}
+
+.cps-value {
+	flex: 1;
+	font-size: clamp(1.2rem, 2vw, 1.8rem);
+	font-weight: 800;
+	letter-spacing: -0.03em;
+	text-align: right;
+	color: #ecfff6;
 }

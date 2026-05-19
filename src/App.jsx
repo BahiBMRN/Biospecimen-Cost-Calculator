@@ -69,15 +69,15 @@ const SCENARIO_META = {
     constants: ['Study levers', 'Kitting and site costs', 'Testing costs'],
   },
   s2: {
-    changes: ['Shipment legs per sample = 2', 'Storage receipt = 1.22', 'Storage rate = 0.07', 'Storage duration = 300 months'],
+    changes: ['Shipment legs per sample = 2', 'Storage receipt = $1.22', 'Storage rate = $0.07', 'Storage duration = 300 months'],
     constants: ['Study levers', 'Kitting and site costs', 'Testing costs'],
   },
   s3: {
-    changes: ['Shipment legs per sample = 3', 'Storage receipt = 1.22', 'Storage rate = 0.07', 'Storage duration = 300 months'],
+    changes: ['Shipment legs per sample = 3', 'Storage receipt = $1.22', 'Storage rate = $0.07', 'Storage duration = 300 months'],
     constants: ['Study levers', 'Kitting and site costs', 'Testing costs'],
   },
   s4: {
-    changes: ['Shipment legs per sample = 2', 'Accessioning cost set to 0', 'All testing values set to 0', 'Storage duration = 300 months'],
+    changes: ['Shipment legs per sample = 2', 'Accessioning cost set to $0', 'All testing values set to 0', 'Storage duration = 300 months'],
     constants: ['Study levers', 'Kitting and site costs'],
   },
 };
@@ -96,12 +96,36 @@ function formatCurrency(v) {
   }).format(Number(v));
 }
 
+function formatCurrencyWhole(v) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0,
+  }).format(Number(v));
+}
+
+function getScoreValueFontSize(formattedStr) {
+  const len = formattedStr.length;
+  if (len <= 8) return 'clamp(3.5rem, 5vw, 5.5rem)';
+  if (len <= 11) return 'clamp(2.6rem, 4vw, 4rem)';
+  if (len <= 14) return 'clamp(1.9rem, 3vw, 3rem)';
+  return 'clamp(1.4rem, 2.5vw, 2.4rem)';
+}
+
 function formatSignedCurrency(v) {
   const numeric = Number(v);
   if (numeric === 0) {
     return formatCurrency(0);
   }
   return `${numeric > 0 ? '+' : '-'}${formatCurrency(Math.abs(numeric))}`;
+}
+
+function formatSignedCurrencyWhole(v) {
+  const numeric = Number(v);
+  if (numeric === 0) {
+    return formatCurrencyWhole(0);
+  }
+  return `${numeric > 0 ? '+' : '-'}${formatCurrencyWhole(Math.abs(numeric))}`;
 }
 
 function formatSignedPercent(v) {
@@ -187,7 +211,7 @@ function DonutTooltip({ active, payload }) {
   );
 }
 
-function BreakdownChart({ segments }) {
+function BreakdownChart({ segments, N_samples }) {
   const sorted = [...segments].sort((a, b) => b.value - a.value);
   return (
     <div className="chart-block">
@@ -196,12 +220,20 @@ function BreakdownChart({ segments }) {
         <ResponsiveContainer width="100%" height="100%" minWidth={260} minHeight={260}>
           <BarChart data={sorted} layout="vertical" margin={{ left: 12, right: 16, top: 8, bottom: 8 }}>
             <XAxis type="number" hide />
-            <YAxis type="category" dataKey="label" width={160} tick={{ fill: '#aeb9d6', fontSize: 20 }} />
+            <YAxis type="category" dataKey="label" width={160} tick={{ fill: '#aeb9d6', fontSize: 20 }} tickFormatter={(label) => `${label} (${GROUP_ABBREV[label] ?? label})`} />
             <Tooltip
-              formatter={(value) => formatCurrency(value)}
               cursor={false}
-              contentStyle={{ color: '#111' }}
-              labelStyle={{ color: '#111', fontWeight: 600 }}
+              content={({ active, payload }) => {
+                if (!active || !payload?.length) return null;
+                const { label, value } = payload[0].payload;
+                return (
+                  <div className="chart-tooltip">
+                    <strong>{label}</strong>
+                    <div>Per Sample: {formatCurrency(value)}</div>
+                    <div>Total Study: {formatCurrencyWhole(value * N_samples)}</div>
+                  </div>
+                );
+              }}
             />
             <Bar dataKey="value" radius={[8, 8, 8, 8]}>
               {sorted.map((entry) => (
@@ -217,11 +249,11 @@ function BreakdownChart({ segments }) {
 
 function DeltaComparisonChart({ baselineResult, scenarioResult }) {
   const componentRows = [
-    { label: 'K', baseline: baselineResult.K, scenario: scenarioResult.K },
-    { label: 'L', baseline: baselineResult.L, scenario: scenarioResult.L },
-    { label: 'T', baseline: baselineResult.T, scenario: scenarioResult.T },
-    { label: 'S', baseline: baselineResult.S, scenario: scenarioResult.S },
-    { label: 'D', baseline: baselineResult.D, scenario: scenarioResult.D },
+    { label: 'K', baseline: baselineResult.K, scenario: scenarioResult.K, color: baselineResult.segments[0].color },
+    { label: 'L', baseline: baselineResult.L, scenario: scenarioResult.L, color: baselineResult.segments[1].color },
+    { label: 'T', baseline: baselineResult.T, scenario: scenarioResult.T, color: baselineResult.segments[2].color },
+    { label: 'S', baseline: baselineResult.S, scenario: scenarioResult.S, color: baselineResult.segments[3].color },
+    { label: 'D', baseline: baselineResult.D, scenario: scenarioResult.D, color: baselineResult.segments[4].color },
   ].map((row) => ({
     ...row,
     delta: row.scenario - row.baseline,
@@ -260,7 +292,7 @@ function DeltaComparisonChart({ baselineResult, scenarioResult }) {
                 data-testid={`delta-row-${index}`}
                 title={`Baseline ${formatCurrency(row.baseline)} | Scenario ${formatCurrency(row.scenario)} | Delta ${formatSignedCurrency(row.delta)}`}
               >
-                <div className="delta-row-label">{row.label}</div>
+                <div className="delta-row-label" style={{ color: row.color }}>{row.label}</div>
                 <div className="delta-row-track">
                   <div className="delta-row-zero" />
                   {row.delta !== 0 && <div className={`delta-row-bar ${row.delta > 0 ? 'positive' : 'negative'}`} style={barStyle} />}
@@ -277,7 +309,7 @@ function DeltaComparisonChart({ baselineResult, scenarioResult }) {
       <div className="delta-total-card" data-testid="total-study-delta-card">
         <div className="delta-section-title">Total Study Cost Delta</div>
         <div className={`delta-total-value ${deltaTotal > 0 ? 'positive' : deltaTotal < 0 ? 'negative' : 'neutral'}`}>
-          {formatSignedCurrency(deltaTotal)}
+          {formatSignedCurrencyWhole(deltaTotal)}
         </div>
         <div className="delta-total-rail">
           <div className="delta-row-zero" />
@@ -293,7 +325,7 @@ function DeltaComparisonChart({ baselineResult, scenarioResult }) {
           )}
         </div>
         <div className="delta-total-percent" data-testid="total-study-delta-percent">
-          {totalPercentDelta === null ? 'Percent delta unavailable at $0 baseline' : `${formatSignedPercent(totalPercentDelta)} Δ`}
+          {totalPercentDelta === null ? 'Percent delta unavailable at $0 baseline' : `${totalPercentDelta > 0 ? '+' : totalPercentDelta < 0 ? '-' : ''}${Math.abs(totalPercentDelta).toFixed(0)}% Δ`}
         </div>
       </div>
     </div>
@@ -301,10 +333,13 @@ function DeltaComparisonChart({ baselineResult, scenarioResult }) {
 }
 
 function CostComposition({ result, variant = 'default', showLockButton = false, onLockIn }) {
-  const pieData = result.segments.map((segment) => ({
-    ...segment,
-    percent: (segment.value / (result.C_sample || 1)) * 100,
-  }));
+  const isCalculatorView = variant === 'default';
+  const pieData = !isCalculatorView
+    ? result.segments.map((segment) => ({
+        ...segment,
+        percent: (segment.value / (result.C_sample || 1)) * 100,
+      }))
+    : null;
 
   const variantMap = {
     locked: { className: 'locked-composition', badge: 'Locked Baseline' },
@@ -313,47 +348,88 @@ function CostComposition({ result, variant = 'default', showLockButton = false, 
   };
   const styleVariant = variantMap[variant] || variantMap.default;
 
+  const formattedTotal = isCalculatorView ? formatCurrencyWhole(result.TRUE_COST) : null;
+
   return (
     <section className={`panel result-card ${styleVariant.className}`}>
-      <div className="result-grid">
-        <div>
-          {styleVariant.badge && <div className="composition-badge">{styleVariant.badge}</div>}
-          <div className="score-label">Cost per sample</div>
-          <h2 className="score-value">{formatCurrency(result.C_sample)}</h2>
-          <p className="equation-line">
-            K({formatCurrency(result.K)}) + L({formatCurrency(result.L)}) + T({formatCurrency(result.T)}) + S({formatCurrency(result.S)}) + D({formatCurrency(result.D)})
-          </p>
+      {styleVariant.badge && <div className="result-card-badge-row"><div className="composition-badge">{styleVariant.badge}</div></div>}
+      <div className={`result-grid${isCalculatorView ? ' result-grid--calculator' : ''}`}>
+        <div className={isCalculatorView ? 'score-box' : 'score-box--blue'}>
+          <div className="score-label">{isCalculatorView ? 'TOTAL STUDY COST' : 'Cost per sample'}</div>
+          {isCalculatorView ? (
+            <h2 className="score-value" style={{ fontSize: getScoreValueFontSize(formattedTotal) }}>
+              {formattedTotal}
+            </h2>
+          ) : (
+            <h2 className="score-value">{formatCurrency(result.C_sample)}</h2>
+          )}
+
         </div>
-        <div className="donut-area">
-          <ResponsiveContainer width="100%" height="100%" minWidth={220} minHeight={220}>
-            <PieChart>
-              <Pie data={pieData} dataKey="value" innerRadius={54} outerRadius={78} paddingAngle={2}>
-                {pieData.map((entry) => (
-                  <Cell key={entry.label} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip content={<DonutTooltip />} />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+        {!isCalculatorView && (
+          <div className="donut-area">
+            <ResponsiveContainer width="100%" height="100%" minWidth={220} minHeight={220}>
+              <PieChart>
+                <Pie data={pieData} dataKey="value" innerRadius={54} outerRadius={78} paddingAngle={2}>
+                  {pieData.map((entry) => (
+                    <Cell key={entry.label} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip content={<DonutTooltip />} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        )}
         <div className="interpretation">
-          <div className="score-label">Interpretation</div>
-          <p>
-            With {formatNumber(result.N_samples)} total samples, this study needs {formatNumber(result.totalShipmentsRequired)} shipments.
-          </p>
-          <p>Total study cost: {formatCurrency(result.TRUE_COST)}</p>
-          {showLockButton && (
-            <button className="interpretation-lock-btn" onClick={onLockIn}>
-              Lock In Cost For Scenario Modeling
-            </button>
+          {isCalculatorView ? (
+            <div className="interpretation-calc-layout">
+              <div className="study-equation">
+                <div className="score-label" style={{ marginBottom: 6 }}>Cost Breakdown</div>
+                {result.segments.map((seg) => (
+                  <span key={seg.label}>
+                    <span style={{ color: seg.color }}>
+                      <strong>{seg.label} ({GROUP_ABBREV[seg.label]})</strong>
+                      {' = '}{formatCurrencyWhole(seg.value * result.N_samples)}
+                    </span>
+                  </span>
+                ))}
+              </div>
+              {showLockButton && (
+                <button className="interpretation-lock-btn" onClick={onLockIn}>
+                  Lock In Cost For Scenario Modeling
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="study-equation">
+              <div className="score-label" style={{ marginBottom: 6 }}>Per Sample Breakdown</div>
+              {result.segments.map((seg) => (
+                <span key={seg.label}>
+                  <span style={{ color: seg.color }}>
+                    <strong>{seg.label} ({GROUP_ABBREV[seg.label]})</strong>
+                    {' = '}{formatCurrency(seg.value)}
+                  </span>
+                </span>
+              ))}
+            </div>
           )}
         </div>
       </div>
       <div className="metrics">
-        <div className="metric metric-important">
-          <div className="label">Total study cost</div>
-          <div className="big">{formatCurrency(result.TRUE_COST)}</div>
-        </div>
+        {isCalculatorView ? (
+          <div className="metric metric-important metric-important--cps">
+            <div className="cps-label-stack">
+              <span>Cost</span>
+              <span>Per</span>
+              <span>Sample</span>
+            </div>
+            <div className="cps-value">{formatCurrency(result.C_sample)}</div>
+          </div>
+        ) : (
+          <div className="metric metric-important">
+            <div className="label">Total study cost</div>
+            <div className="big">{formatCurrencyWhole(result.TRUE_COST)}</div>
+          </div>
+        )}
         <div className="metric">
           <div className="label">Total samples</div>
           <div className="big">{formatNumber(result.N_samples)}</div>
@@ -439,6 +515,14 @@ function categoryClass(group) {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 }
+
+const GROUP_ABBREV = {
+  'Kitting & Site': 'K',
+  'Logistics': 'L',
+  'Testing': 'T',
+  'Storage': 'S',
+  'Disposal': 'D',
+};
 
 function App() {
   const [activeTab, setActiveTab] = useState('calculator');
@@ -569,12 +653,13 @@ function App() {
       {(activeTab === 'calculator' || activeTab === 'scenarios') && (
         <div className="shell">
           <section className="hero">
-            <div className="eyebrow"><span className="dot" /> Biospecimen lifetime cost model</div>
-            <h1>{activeTab === 'calculator' ? 'Interactive Biospecimen Study Lifetime Cost Calculator' : 'What-If Scenarios'}</h1>
+            <h1>{activeTab === 'calculator' ? 'Biospecimen Study Lifetime Cost Calculator' : 'What-If Scenarios'}</h1>
             <p className="sub">
+              <span className="hero-dot" />
               {activeTab === 'calculator'
-                ? 'This calculator models the cost of biospecimen collections for the lifetime of the study. Adjust the below parameters to view cost impacts in real time.'
-                : 'Select a predefined scenario or fine-tune study and sample levers to see impact of change on total costs.'}
+                ? 'Model the cost of biospecimen collections for the lifetime of the study by adjusting the below parameters to view cost impacts in real time'
+                : 'Select a predefined scenario or fine-tune study and sample levers to see impact on total costs'}
+              <span className="hero-dot" style={{ marginRight: 0, marginLeft: 10 }} />
             </p>
           </section>
 
@@ -587,7 +672,7 @@ function App() {
                 <div className="controls">
                   {costGroups.map((groupObj) => (
                     <details className={`accordion cat-${categoryClass(groupObj.group)}`} key={groupObj.group}>
-                      <summary>{groupObj.group}</summary>
+                      <summary>{groupObj.group} ({GROUP_ABBREV[groupObj.group]})</summary>
                       <div className="accordion-content">
                         {groupObj.items.map((item) => (
                           <NumberControl key={item.key} item={item} value={calculatorInputs[item.key]} onChange={updateCalculatorValue} withSlider />
@@ -609,7 +694,7 @@ function App() {
                   <div className="controls">
                     <details className="accordion scenario-list-accordion" open>
                       <summary>
-                        <span className="scenario-heading">Scenarios</span>
+                        <span className="scenario-heading">Presets</span>
                         <button
                           type="button"
                           className="reset-scenario-btn"
@@ -662,7 +747,7 @@ function App() {
                       <div className="accordion-content">
                         {costGroups.map((groupObj) => (
                           <details className={`accordion cat-${categoryClass(groupObj.group)}`} key={groupObj.group}>
-                            <summary>{groupObj.group}</summary>
+                            <summary>{groupObj.group} ({GROUP_ABBREV[groupObj.group]})</summary>
                             <div className="accordion-content">
                               {groupObj.items.map((item) => (
                                 <NumberControl
@@ -707,7 +792,7 @@ function App() {
                 <>
                   <CostComposition result={calculatorResult} showLockButton onLockIn={lockCostForScenarioModeling} />
                   <section className="panel">
-                    <BreakdownChart segments={calculatorResult.segments} />
+                    <BreakdownChart segments={calculatorResult.segments} N_samples={calculatorResult.N_samples} />
                   </section>
                 </>
               ) : (
@@ -718,18 +803,13 @@ function App() {
                       {activeScenario ? (
                         <>
                           <div className="assump-title">Scenario Assumptions: {SCENARIO_LABELS[activeScenario]}</div>
-                          <div className="mini dim">Scenario values are applied on top of the locked baseline. Fine-tuning any lever switches this panel to custom dynamic values.</div>
-                          <div className="mini"><strong>Changes:</strong> {SCENARIO_META[activeScenario].changes.join(' | ')}</div>
+                          <div className="mini"><strong>Changed:</strong> {SCENARIO_META[activeScenario].changes.join(' | ')}</div>
                           <div className="mini"><strong>Unchanged:</strong> {SCENARIO_META[activeScenario].constants.join(' | ')}</div>
                         </>
                       ) : (
                         <>
                           <div className="assump-title">Custom Scenario Comparison</div>
-                          <div className="mini dim">This view reflects the current scenario lever values in real time. Click a preset button to return to preset assumptions.</div>
-                          <div className="mini"><strong>Formula:</strong> C_sample = K + L + T + S + D</div>
-                          <div className="mini">
-                            <strong>Current values:</strong> K({formatCurrency(scenarioResult.K)}) + L({formatCurrency(scenarioResult.L)}) + T({formatCurrency(scenarioResult.T)}) + S({formatCurrency(scenarioResult.S)}) + D({formatCurrency(scenarioResult.D)}) = {formatCurrency(scenarioResult.C_sample)}
-                          </div>
+                          <div className="mini dim">This view reflects your custom configured lever values in real time. Click a preset button for programmed scenarios.</div>
                         </>
                       )}
                     </section>
