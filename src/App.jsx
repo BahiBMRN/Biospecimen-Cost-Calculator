@@ -355,7 +355,7 @@ function CostComposition({ result, variant = 'default', showLockButton = false, 
       {styleVariant.badge && <div className="result-card-badge-row"><div className="composition-badge">{styleVariant.badge}</div></div>}
       <div className={`result-grid${isCalculatorView ? ' result-grid--calculator' : ''}`}>
         <div className={isCalculatorView ? 'score-box' : 'score-box--blue'}>
-          <div className="score-label">{isCalculatorView ? 'TOTAL STUDY COST' : 'Cost per sample'}</div>
+          <div className="score-label">{isCalculatorView ? 'TOTAL COLLECTION STUDY COST' : 'Cost per sample'}</div>
           {isCalculatorView ? (
             <h2 className="score-value" style={{ fontSize: getScoreValueFontSize(formattedTotal) }}>
               {formattedTotal}
