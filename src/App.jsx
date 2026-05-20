@@ -5,11 +5,12 @@ import { clamp } from './utils.js';
 import CalculatorView from './views/CalculatorView.jsx';
 import ScenariosView from './views/ScenariosView.jsx';
 import StoreDisposeView from './views/StoreDisposeView.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
 import './App.css';
 
 function App() {
   const [activeTab, setActiveTab] = useState('calculator');
-  const [calculatorInputs, setCalculatorInputs] = useState({ ...DEFAULTS, ...PRESETS.s1 });
+  const [calculatorInputs, setCalculatorInputs] = useState(DEFAULTS);
   const [lockedInputs, setLockedInputs] = useState(null);
   const [scenarioInputs, setScenarioInputs] = useState(null);
   const [activeScenario, setActiveScenario] = useState(null);
@@ -97,6 +98,7 @@ function App() {
   };
 
   return (
+    <ErrorBoundary>
     <div className="app">
       <nav className="tab-bar">
         <a
@@ -127,7 +129,7 @@ function App() {
           What-If Scenarios
         </button>
         <button className={activeTab === 'wif' ? 'tab-btn active' : 'tab-btn'} onClick={() => setActiveTab('wif')}>
-          Store or Dispose <span className="tab-btn-soon">Soon</span>
+          Store or Dispose
         </button>
       </nav>
 
@@ -158,6 +160,7 @@ function App() {
 
       {activeTab === 'wif' && <StoreDisposeView />}
     </div>
+    </ErrorBoundary>
   );
 }
 

@@ -2,5 +2,8 @@ node_modules
 index.html
 package-lock.json
 reportwebvitals.js
-App.test.jsx
 application-summary_*.md
+*Store & Dispose Module Requirements.md
+s&d_plan.md
+.github*
+/markdown

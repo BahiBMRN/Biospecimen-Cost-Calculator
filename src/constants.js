@@ -77,3 +77,62 @@ export const GROUP_ABBREV = {
   'Storage': 'S',
   'Disposal': 'D',
 };
+
+// ── Store & Dispose Module Constants ────────────────────────────────────────
+
+export const SD_SAMPLE_TYPES = [
+  { key: 'whole_blood', label: 'Whole Blood', emoji: '🩸' },
+  { key: 'plasma',      label: 'Plasma',      emoji: '🧪' },
+  { key: 'serum',       label: 'Serum',        emoji: '🧪' },
+  { key: 'urine',       label: 'Urine',        emoji: '🧫' },
+  { key: 'dna',         label: 'DNA',          emoji: '🧬' },
+  { key: 'rna',         label: 'RNA',          emoji: '🧬' },
+  { key: 'tissue',      label: 'Tissue',       emoji: '🔬' },
+  { key: 'other',       label: 'Other',        emoji: '🗂️' },
+];
+
+export const SD_CONTAINER_SIZES = [
+  { key: 'lte4mL',      label: '≤4mL' },
+  { key: 'gt4_lte10mL', label: '>4mL to ≤10mL' },
+  { key: 'gt10_lte25mL',label: '>10mL to ≤25mL' },
+  { key: 'gt25_lte50mL',label: '>25mL to ≤50mL' },
+  { key: 'gt50_lte100mL',label: '>50mL to ≤100mL' },
+  { key: 'slides',      label: 'Slides' },
+];
+
+export const SD_STORAGE_TEMPS = [
+  { key: 'ambient',    label: 'Ambient' },
+  { key: 'refrig_20',  label: 'Refrigerated -20°C' },
+  { key: 'neg70_80',   label: '-70°C to -80°C' },
+  { key: 'ln2',        label: '-190°C (LN2)' },
+];
+
+// Maps sample type key → allowed container size keys.
+// 'other' allows all sizes.
+export const SD_SAMPLE_TYPE_CONTAINERS = {
+  whole_blood: ['lte4mL', 'gt4_lte10mL'],
+  plasma:      ['lte4mL'],
+  serum:       ['lte4mL'],
+  urine:       ['gt4_lte10mL'],
+  dna:         ['lte4mL'],
+  rna:         ['lte4mL'],
+  tissue:      ['slides'],
+  other:       ['lte4mL', 'gt4_lte10mL', 'gt10_lte25mL', 'gt25_lte50mL', 'gt50_lte100mL', 'slides'],
+};
+
+// Storage rates ($/sample/month) keyed by containerSize → temp.
+// Slides use the same rates as lte4mL.
+export const SD_STORAGE_RATES = {
+  lte4mL:       { ambient: 0.068, refrig_20: 0.070, neg70_80: 0.075, ln2: 0.154 },
+  gt4_lte10mL:  { ambient: 0.137, refrig_20: 0.141, neg70_80: 0.150, ln2: 0.308 },
+  gt10_lte25mL: { ambient: 0.26,  refrig_20: 0.27,  neg70_80: 0.28,  ln2: 0.58  },
+  gt25_lte50mL: { ambient: 0.44,  refrig_20: 0.45,  neg70_80: 0.48,  ln2: 0.98  },
+  gt50_lte100mL:{ ambient: 0.70,  refrig_20: 0.72,  neg70_80: 0.77,  ln2: 1.58  },
+  slides:       { ambient: 0.068, refrig_20: 0.070, neg70_80: 0.075, ln2: 0.154 },
+};
+
+export const SD_FIXED_RATES = {
+  registration: 1.22,
+  retrieval:    2.32,
+  disposal:     2.32,
+};

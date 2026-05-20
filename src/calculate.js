@@ -1,4 +1,4 @@
-import { COLORS } from './constants.js';
+import { COLORS, SD_FIXED_RATES, SD_STORAGE_RATES } from './constants.js';
 import { ceilDiv } from './utils.js';
 
 export function calculate(inputs) {
@@ -46,4 +46,78 @@ export function calculate(inputs) {
   ];
 
   return { C_sample, TRUE_COST, N_samples, totalShipmentsRequired, segments, K, L, T, S, D };
+}
+
+// ── Store & Dispose Calculation Functions ────────────────────────────────────
+
+/**
+ * Calculate storage cost per sample and optional total study cost.
+ * @param {{ containerSize: string|null, storageTemp: string|null, storageDuration: number, totalSamples: string|number }} inputs
+ * @returns {{ perSample: number|null, totalStudy: number|null, storageRate: number|null }}
+ */
+export function calculateStorage({ containerSize, storageTemp, storageDuration, totalSamples }) {
+  if (!containerSize || !storageTemp) {
+    return { perSample: null, totalStudy: null, storageRate: null };
+  }
+
+  const rateRow = SD_STORAGE_RATES[containerSize];
+  const storageRate = rateRow ? rateRow[storageTemp] : null;
+
+  if (storageRate == null) {
+    return { perSample: null, totalStudy: null, storageRate: null };
+  }
+
+  const duration = Number(storageDuration) || 0;
+  const perSample = SD_FIXED_RATES.registration + storageRate * duration;
+  const n = Number(totalSamples);
+  const totalStudy = n > 0 ? perSample * n : null;
+
+  return { perSample, totalStudy, storageRate };
+}
+
+/**
+ * Calculate disposal cost per sample and optional total study cost.
+ * Disposal rates are fixed regardless of container size.
+ * @param {{ totalSamples: string|number }} inputs
+ * @returns {{ perSample: number, totalStudy: number|null }}
+ */
+export function calculateDisposal({ totalSamples }) {
+  const perSample = SD_FIXED_RATES.registration + SD_FIXED_RATES.disposal;
+  const n = Number(totalSamples);
+  const totalStudy = n > 0 ? perSample * n : null;
+  return { perSample, totalStudy };
+}
+
+/**
+ * Calculate combined store & dispose cost.
+ * Registration applies once (at storage); Retrieval applies for disposal.
+ * @param {{ containerSize: string|null, storageTemp: string|null, storageDuration: number, totalSamples: string|number }} storeInputs
+ * @param {{ totalSamples: string|number }} disposeInputs
+ * @returns {{ perSample: number|null, totalStudy: number|null, storagePortion: number|null, disposalPortion: number }}
+ */
+export function calculateStoreAndDispose(storeInputs, disposeInputs) {
+  const { containerSize, storageTemp, storageDuration } = storeInputs;
+
+  if (!containerSize || !storageTemp) {
+    return { perSample: null, totalStudy: null, storagePortion: null, disposalPortion: null };
+  }
+
+  const rateRow = SD_STORAGE_RATES[containerSize];
+  const storageRate = rateRow ? rateRow[storageTemp] : null;
+
+  if (storageRate == null) {
+    return { perSample: null, totalStudy: null, storagePortion: null, disposalPortion: null };
+  }
+
+  const duration = Number(storageDuration) || 0;
+  // Registration applied once at storage receipt
+  const storagePortion = SD_FIXED_RATES.registration + storageRate * duration;
+  // Retrieval + Disposal for disposal (no double-registration)
+  const disposalPortion = SD_FIXED_RATES.retrieval + SD_FIXED_RATES.disposal;
+  const perSample = storagePortion + disposalPortion;
+
+  const n = Number(storeInputs.totalSamples) || Number(disposeInputs.totalSamples) || 0;
+  const totalStudy = n > 0 ? perSample * n : null;
+
+  return { perSample, totalStudy, storagePortion, disposalPortion, storageRate };
 }

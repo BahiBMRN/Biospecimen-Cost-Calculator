@@ -1,16 +1,27 @@
 import { formatCurrency, formatSignedCurrency, formatSignedCurrencyWhole } from '../utils.js';
+import { GROUP_ABBREV } from '../constants.js';
 
 export default function DeltaComparisonChart({ baselineResult, scenarioResult }) {
-  const componentRows = [
-    { label: 'K', baseline: baselineResult.K, scenario: scenarioResult.K, color: baselineResult.segments[0].color },
-    { label: 'L', baseline: baselineResult.L, scenario: scenarioResult.L, color: baselineResult.segments[1].color },
-    { label: 'T', baseline: baselineResult.T, scenario: scenarioResult.T, color: baselineResult.segments[2].color },
-    { label: 'S', baseline: baselineResult.S, scenario: scenarioResult.S, color: baselineResult.segments[3].color },
-    { label: 'D', baseline: baselineResult.D, scenario: scenarioResult.D, color: baselineResult.segments[4].color },
-  ].map((row) => ({
-    ...row,
-    delta: row.scenario - row.baseline,
-  }));
+  const abbrevs = ['K', 'L', 'T', 'S', 'D'];
+  const colorByAbbrev = (() => {
+    const map = {};
+    if (Array.isArray(baselineResult.segments)) {
+      for (const seg of baselineResult.segments) {
+        const abbr = GROUP_ABBREV[seg.label];
+        if (abbr && !(abbr in map)) {
+          map[abbr] = seg.color;
+        }
+      }
+    }
+    return map;
+  })();
+
+  const componentRows = abbrevs.map((abbr) => {
+    const baseline = baselineResult[abbr];
+    const scenario = scenarioResult[abbr];
+    const color = colorByAbbrev[abbr] ?? '#e9efff';
+    return { label: abbr, baseline, scenario, color, delta: scenario - baseline };
+  });
 
   const componentDomainMax = Math.max(1, ...componentRows.map((row) => Math.abs(row.delta))) * 1.15;
 

@@ -52,7 +52,12 @@ Input model includes 20 configurable levers grouped by:
 
 ### Store or Dispose
 
-- Upcoming Module
+- Three sub‑tabs with local state only (no interference with Calculator/Scenarios):
+	- Store: select Sample Type → Container Size → Storage Temperature → Duration → optional Total Samples. Shows per‑sample and total‑study cost with explicit formula: `Registration + (Storage Rate × Duration)`.
+	- Dispose: select Sample Type → Container Size (informational) → optional Total Samples. Fixed per‑sample formula: `$1.22 + $2.32 = $3.54`.
+	- Store & Dispose: combines storage and disposal; applies Registration once at storage, then Retrieval + Disposal for the disposal portion. Validation checklist appears until both sides are sufficiently configured.
+- Slides map to the ≤4mL storage rate row by design.
+- Total Study Cost tiles remain hidden until a positive Total Samples value is provided.
 
 ## Technical Stack and Setup
 
@@ -74,10 +79,11 @@ Input model includes 20 configurable levers grouped by:
 ## Quality and Current State
 
 - Current maturity: advanced MVP / pre-production — core calculator and scenario modeling workflows are complete and robust
-- **Structural refactor complete:** `App.jsx` reduced from ~850 lines to 165 lines; logic decomposed into `constants.js`, `utils.js`, `calculate.js`, dedicated components, and view-level modules
-- **Pure calculation layer:** exported `calculate()` function is isolated and fully unit-testable with no side effects
+- **Structural refactor complete:** logic decomposed into `constants.js`, `utils.js`, `calculate.js`, dedicated components, and view-level modules
+- **Pure calculation layer:** exported `calculate()` and Store & Dispose helpers are isolated and unit-testable with no side effects
 - **Defensive math:** zero-volume, zero-denominator, and zero-baseline edge cases handled throughout
-- Automated tests: 12+ test cases covering lock/unlock flow, preset application, reset behavior, delta sidebar rendering, zero-baseline percent guard, zero-volume output correctness, and `T_data_total` normalization
+- Automated tests: 12 test cases covering lock/unlock flow, preset application, reset behavior, delta sidebar rendering, zero-baseline percent guard, zero-volume output correctness, and `T_data_total` normalization
+- Notes: Recharts emits dimension warnings in jsdom during tests; these are non-fatal.
 
 ## Code Locations
 
@@ -85,10 +91,19 @@ Input model includes 20 configurable levers grouped by:
 |---|---|
 | `src/constants.js` | Single source of truth for `COLORS`, `CONFIG` (all 20 levers), `PRESETS`, `SCENARIO_LABELS`, `SCENARIO_META`, `DEFAULTS`, `GROUP_ABBREV` |
 | `src/utils.js` | Pure utility functions: formatting, math helpers (`clamp`, `ceilDiv`), UI helpers |
-| `src/calculate.js` | Exported `calculate()` pure function; all cost math; returns `C_sample`, `TRUE_COST`, `N_samples`, shipment count, and K/L/T/S/D segments |
-| `src/App.jsx` | Root component (165 lines); application state, tab routing, lock/reset/applyScenario handlers |
+| `src/calculate.js` | Exported `calculate()` pure function; Store & Dispose helpers `calculateStorage`, `calculateDisposal`, `calculateStoreAndDispose`; returns `C_sample`, `TRUE_COST`, `N_samples`, shipment count, and K/L/T/S/D segments |
+| `src/App.jsx` | Root component; application state, tab routing (Calculator, What‑If, Store or Dispose), lock/reset/applyScenario handlers |
 | `src/App.css` | Layout, theming, and component styling (CSS custom property design tokens) |
 | `src/views/CalculatorView.jsx` | Calculator tab: sample levers, study volume levers, cost composition, breakdown chart, assumptions panel |
 | `src/views/ScenariosView.jsx` | What-If tab: preset buttons, editable levers, locked/scenario cards, delta comparison chart |
-| `src/views/StoreDisposeView.jsx` | Placeholder shell for the upcoming Store or Dispose module |
-| `src/components/` | 6 reusable UI components: `CostComposition`, `BreakdownChart`, `DeltaComparisonChart`, `NumberControl`, `DonutTooltip`, `AssumptionsCaveats` |
+| `src/views/StoreDisposeView.jsx` | Full Store & Dispose module view: local state, sub-tab routing, memoized calculations |
+| `src/components/` | UI components including: `CostComposition`, `BreakdownChart`, `DeltaComparisonChart`, `NumberControl`, `DonutTooltip`, `AssumptionsCaveats`, `SDConfigPanel`, `SDOutputPanel` |
+
+### Store & Dispose Data/Config Additions
+
+- `src/constants.js`
+	- `SD_SAMPLE_TYPES`, `SD_CONTAINER_SIZES`, `SD_STORAGE_TEMPS`, `SD_SAMPLE_TYPE_CONTAINERS`, `SD_STORAGE_RATES`, `SD_FIXED_RATES`
+- `src/calculate.js`
+	- `calculateStorage({ containerSize, storageTemp, storageDuration, totalSamples })`
+	- `calculateDisposal({ totalSamples })`
+	- `calculateStoreAndDispose(storeInputs, disposeInputs)`
