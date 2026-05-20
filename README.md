@@ -67,16 +67,28 @@ Input model includes 20 configurable levers grouped by:
 
 - Client-side SPA with static build output
 - No backend or external API integrations
-- In-memory React state only (`calculatorInputs`, `lockedInputs`, `scenarioInputs`, `activeScenario`)
+- In-memory React state only (`calculatorInputs`, `lockedInputs`, `scenarioInputs`, `activeScenario`, `activeTab`)
 - No persistence layer (no database, queue, or local storage) [Coming Later]
+- PWA manifest present (`public/manifest.json`) — progressive web app installability configured
 
 ## Quality and Current State
 
-- Current maturity: advanced MVP with robust scenario workflow
-- Automated tests: scenario and delta behaviors are covered
-- Implementation concentration: primary model and UI logic are currently centralized in one main component
+- Current maturity: advanced MVP / pre-production — core calculator and scenario modeling workflows are complete and robust
+- **Structural refactor complete:** `App.jsx` reduced from ~850 lines to 165 lines; logic decomposed into `constants.js`, `utils.js`, `calculate.js`, dedicated components, and view-level modules
+- **Pure calculation layer:** exported `calculate()` function is isolated and fully unit-testable with no side effects
+- **Defensive math:** zero-volume, zero-denominator, and zero-baseline edge cases handled throughout
+- Automated tests: 12+ test cases covering lock/unlock flow, preset application, reset behavior, delta sidebar rendering, zero-baseline percent guard, zero-volume output correctness, and `T_data_total` normalization
 
 ## Code Locations
 
-- `src/App.jsx`: model formulas, scenario logic, and application flow
-- `src/App.css`: layout, theming, and component styling
+| File / Folder | Responsibility |
+|---|---|
+| `src/constants.js` | Single source of truth for `COLORS`, `CONFIG` (all 20 levers), `PRESETS`, `SCENARIO_LABELS`, `SCENARIO_META`, `DEFAULTS`, `GROUP_ABBREV` |
+| `src/utils.js` | Pure utility functions: formatting, math helpers (`clamp`, `ceilDiv`), UI helpers |
+| `src/calculate.js` | Exported `calculate()` pure function; all cost math; returns `C_sample`, `TRUE_COST`, `N_samples`, shipment count, and K/L/T/S/D segments |
+| `src/App.jsx` | Root component (165 lines); application state, tab routing, lock/reset/applyScenario handlers |
+| `src/App.css` | Layout, theming, and component styling (CSS custom property design tokens) |
+| `src/views/CalculatorView.jsx` | Calculator tab: sample levers, study volume levers, cost composition, breakdown chart, assumptions panel |
+| `src/views/ScenariosView.jsx` | What-If tab: preset buttons, editable levers, locked/scenario cards, delta comparison chart |
+| `src/views/StoreDisposeView.jsx` | Placeholder shell for the upcoming Store or Dispose module |
+| `src/components/` | 6 reusable UI components: `CostComposition`, `BreakdownChart`, `DeltaComparisonChart`, `NumberControl`, `DonutTooltip`, `AssumptionsCaveats` |
