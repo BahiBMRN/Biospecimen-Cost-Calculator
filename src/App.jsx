@@ -834,7 +834,7 @@ function App() {
         <div className="shell">
           <section className="hero">
             <h1>Store or Dispose</h1>
-            <p>Storage and disposal what-if module is coming soon.</p>
+            <p>Storage and disposal module coming soon.</p>
           </section>
         </div>
       )}
