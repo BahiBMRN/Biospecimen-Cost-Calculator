@@ -1,9 +1,92 @@
 node_modules
-index.html
-package-lock.json
 reportwebvitals.js
 application-summary_*.md
 *Store & Dispose Module Requirements.md
 s&d_plan.md
-.github*
 /markdown
+
+# === Environment files (may contain API keys, connection strings) ===
+.env
+.env.local
+.env.*.local
+.env.development
+.env.development.local
+.env.production
+.env.production.local
+.env.staging
+.env.test
+
+# === Private keys & certificates ===
+*.pem
+*.key
+*.p12
+*.pfx
+*.cer
+*.crt
+*.der
+*.p8
+
+# === Generic secret / credential patterns ===
+*secrets*
+*credentials*
+*.secret
+secrets.json
+credentials.json
+auth.json
+
+# === Package manager auth (may contain registry tokens) ===
+.npmrc
+.yarnrc
+.yarnrc.yml
+.netrc
+
+# === Cloud CLI auth caches ===
+.azure/
+.aws/
+.gcloud/
+gcp-credentials*.json
+
+# === Infrastructure-as-Code (defensive — shouldn't be in this repo, but if added, never commit) ===
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+.terraform/
+.terraform.lock.hcl
+
+# === IDE / editor (may auto-save snippets containing secrets) ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.history/
+
+# === Logs (stack traces can include secret values) ===
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+logs/
+
+# === Build output (build-time env vars can be inlined into bundle) ===
+dist/
+build/
+.vite/
+.cache/
+
+# === Test artifacts (low-risk info disclosure) ===
+coverage/
+.nyc_output/
+
+# === OS metadata ===
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# === Backup / temp files (may be older versions with secrets you've since rotated) ===
+*.bak
+*.tmp
+*.old
+*.orig
