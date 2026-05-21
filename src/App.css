@@ -827,6 +827,7 @@ input[type='number'] {
 
 .sd-tab-row {
 	display: flex;
+	align-items: flex-end;
 	gap: 8px;
 	padding: 16px 16px 0;
 	border-bottom: 1px solid var(--border);
@@ -862,6 +863,35 @@ input[type='number'] {
 	background: rgba(255, 255, 255, 0.07);
 	border-color: var(--border);
 	border-bottom-color: transparent;
+}
+
+.sd-combined-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	padding: 11px 18px;
+	border-radius: 12px;
+	border: 1px solid var(--accent-2);
+	background: rgba(154, 124, 255, 0.08);
+	color: var(--accent-2);
+	font: inherit;
+	font-size: 0.95rem;
+	font-weight: 700;
+	cursor: pointer;
+	transition: background 150ms, border-color 150ms, color 150ms;
+}
+
+.sd-combined-btn:hover {
+	background: rgba(154, 124, 255, 0.16);
+	color: var(--text);
+}
+
+.sd-combined-btn.active {
+	background: rgba(154, 124, 255, 0.2);
+	border-color: var(--accent-2);
+	color: var(--text);
+	box-shadow: 0 0 0 1px rgba(154, 124, 255, 0.4);
 }
 
 .sd-config-body {
@@ -1014,6 +1044,8 @@ input[type='number'] {
 	border-radius: 14px;
 	border: 1px solid var(--border);
 	background: rgba(255, 255, 255, 0.04);
+	display: flex;
+	flex-direction: column;
 }
 
 .sd-read-only-card-title {

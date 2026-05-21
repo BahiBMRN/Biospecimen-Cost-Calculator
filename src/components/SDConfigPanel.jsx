@@ -1,4 +1,6 @@
 import { SD_CONTAINER_SIZES, SD_SAMPLE_TYPE_CONTAINERS, SD_SAMPLE_TYPES, SD_STORAGE_TEMPS } from '../constants.js';
+import { calculateDisposal, calculateStorage } from '../calculate.js';
+import { formatCurrency, formatCurrencyWhole } from '../utils.js';
 
 // ── Icons for sub-tab toggle buttons ────────────────────────────────────────
 const StoreIcon = () => (
@@ -30,7 +32,7 @@ const BothIcon = () => (
 const SD_TABS = [
   { key: 'store',          label: 'Store',           Icon: StoreIcon },
   { key: 'dispose',        label: 'Dispose',         Icon: DisposeIcon },
-  { key: 'storeAndDispose',label: 'Store & Dispose',  Icon: BothIcon },
+  { key: 'storeAndDispose',label: 'Store Or Dispose',  Icon: BothIcon },
 ];
 
 // ── Option row: large buttons (sample type) ──────────────────────────────────
@@ -80,7 +82,38 @@ function SmallOptionRow({ label, options, selected, onSelect }) {
 }
 
 // ── Numeric input row ─────────────────────────────────────────────────────────
-function NumericRow({ label, value, onChange, min = 0, max, step = 1, placeholder }) {
+function NumericRow({ label, value, onChange, min = 0, max, step = 1, placeholder, layout }) {
+  if (layout === 'control') {
+    return (
+      <div className="control">
+        <div className="control-header">
+          <label className="sd-option-row-label">{label}</label>
+          <div className="control-input-group">
+            <input
+              type="number"
+              value={value}
+              min={min}
+              max={max}
+              step={step}
+              placeholder={placeholder}
+              onChange={(e) => onChange(e.target.value === '' ? '' : Number(e.target.value))}
+            />
+          </div>
+        </div>
+        {max && (
+          <input
+            type="range"
+            min={min}
+            max={max}
+            step={step}
+            value={value === '' ? 0 : value}
+            onChange={(e) => onChange(Number(e.target.value))}
+          />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="sd-option-section">
       <div className="sd-option-row-label">{label}</div>
@@ -127,6 +160,11 @@ function ReadOnlySummaryCards({ storeInputs, disposeInputs }) {
     { label: 'Total Samples', value: disposeInputs.totalSamples !== '' && Number(disposeInputs.totalSamples) > 0 ? Number(disposeInputs.totalSamples).toLocaleString() : null },
   ].filter((r) => r.value != null);
 
+  const storeResult = calculateStorage(storeInputs);
+  const disposeResult = calculateDisposal(disposeInputs);
+  const storeHasTotal = storeInputs.totalSamples !== '' && Number(storeInputs.totalSamples) > 0;
+  const disposeHasTotal = disposeInputs.totalSamples !== '' && Number(disposeInputs.totalSamples) > 0;
+
   return (
     <div className="sd-read-only-cards">
       <div className="sd-read-only-card">
@@ -140,6 +178,20 @@ function ReadOnlySummaryCards({ storeInputs, disposeInputs }) {
         ) : (
           <p className="sd-validation-msg">No Store selections made yet.</p>
         )}
+        <div className="sd-cost-tiles" style={{ marginTop: 10 }}>
+          <div className="sd-cost-tile">
+            <div className="sd-cost-tile-label">Cost Per Sample</div>
+            <div className="sd-cost-tile-value">
+              {storeResult.perSample != null ? formatCurrency(storeResult.perSample) : <span className="sd-cost-tile-empty">—</span>}
+            </div>
+          </div>
+          <div className="sd-cost-tile sd-cost-tile--total">
+            <div className="sd-cost-tile-label">Total Study Cost</div>
+            <div className="sd-cost-tile-value">
+              {storeHasTotal && storeResult.totalStudy != null ? formatCurrencyWhole(storeResult.totalStudy) : <span className="sd-cost-tile-empty">—</span>}
+            </div>
+          </div>
+        </div>
       </div>
       <div className="sd-read-only-card">
         <div className="sd-read-only-card-title">Dispose Configuration</div>
@@ -152,13 +204,27 @@ function ReadOnlySummaryCards({ storeInputs, disposeInputs }) {
         ) : (
           <p className="sd-validation-msg">No Dispose selections made yet.</p>
         )}
+        <div className="sd-cost-tiles" style={{ marginTop: 'auto' }}>
+          <div className="sd-cost-tile">
+            <div className="sd-cost-tile-label">Cost Per Sample</div>
+            <div className="sd-cost-tile-value">
+              {formatCurrency(disposeResult.perSample)}
+            </div>
+          </div>
+          <div className="sd-cost-tile sd-cost-tile--total">
+            <div className="sd-cost-tile-label">Total Study Cost</div>
+            <div className="sd-cost-tile-value">
+              {disposeHasTotal && disposeResult.totalStudy != null ? formatCurrencyWhole(disposeResult.totalStudy) : <span className="sd-cost-tile-empty">—</span>}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
 // ── Main Config Panel ─────────────────────────────────────────────────────────
-export default function SDConfigPanel({ activeSDTab, setActiveSDTab, storeInputs, setStoreInputs, disposeInputs, setDisposeInputs }) {
+export default function SDConfigPanel({ activeSDTab, setActiveSDTab, storeInputs, setStoreInputs, disposeInputs, setDisposeInputs, onReset }) {
   // Derive allowed container sizes for each tab
   const storeContainerOptions = storeInputs.sampleType
     ? SD_CONTAINER_SIZES.filter((c) => (SD_SAMPLE_TYPE_CONTAINERS[storeInputs.sampleType] ?? []).includes(c.key))
@@ -184,6 +250,14 @@ export default function SDConfigPanel({ activeSDTab, setActiveSDTab, storeInputs
             {label}
           </button>
         ))}
+        <button
+          type="button"
+          className="reset-scenario-btn"
+          style={{ marginLeft: 'auto', alignSelf: 'center', marginBottom: 2 }}
+          onClick={onReset}
+        >
+          Reset
+        </button>
       </div>
 
       <div className="sd-config-body">
@@ -213,13 +287,17 @@ export default function SDConfigPanel({ activeSDTab, setActiveSDTab, storeInputs
               min={0}
               max={500}
               step={1}
+              layout="control"
             />
             <NumericRow
               label="Total Number of Expected Samples"
               value={storeInputs.totalSamples}
               onChange={(val) => setStoreInputs((p) => ({ ...p, totalSamples: val }))}
-              min={1}
+              min={0}
+              max={100000}
+              step={1}
               placeholder="Optional"
+              layout="control"
             />
           </>
         )}
@@ -241,8 +319,11 @@ export default function SDConfigPanel({ activeSDTab, setActiveSDTab, storeInputs
               label="Total Number of Expected Samples"
               value={disposeInputs.totalSamples}
               onChange={(val) => setDisposeInputs((p) => ({ ...p, totalSamples: val }))}
-              min={1}
+              min={0}
+              max={100000}
+              step={1}
               placeholder="Optional"
+              layout="control"
             />
           </>
         )}

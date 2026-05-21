@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CONFIG, DEFAULTS, PRESETS } from './constants.js';
+import { CONFIG, DEFAULTS, PRESETS, STARTUP_DEFAULTS } from './constants.js';
 import { calculate } from './calculate.js';
 import { clamp } from './utils.js';
 import CalculatorView from './views/CalculatorView.jsx';
@@ -10,7 +10,7 @@ import './App.css';
 
 function App() {
   const [activeTab, setActiveTab] = useState('calculator');
-  const [calculatorInputs, setCalculatorInputs] = useState(DEFAULTS);
+  const [calculatorInputs, setCalculatorInputs] = useState(STARTUP_DEFAULTS);
   const [lockedInputs, setLockedInputs] = useState(null);
   const [scenarioInputs, setScenarioInputs] = useState(null);
   const [activeScenario, setActiveScenario] = useState(null);
@@ -89,6 +89,10 @@ function App() {
     setActiveScenario(null);
   };
 
+  const resetCalculatorToStartup = () => {
+    setCalculatorInputs({ ...STARTUP_DEFAULTS });
+  };
+
   const lockCostForScenarioModeling = () => {
     const baseline = { ...calculatorInputs };
     setLockedInputs(baseline);
@@ -141,6 +145,7 @@ function App() {
           updateCalculatorValue={updateCalculatorValue}
           calculatorResult={calculatorResult}
           onLockIn={lockCostForScenarioModeling}
+          onReset={resetCalculatorToStartup}
         />
       )}
 

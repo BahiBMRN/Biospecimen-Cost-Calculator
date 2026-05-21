@@ -5,7 +5,7 @@ import BreakdownChart from '../components/BreakdownChart.jsx';
 import CostComposition from '../components/CostComposition.jsx';
 import NumberControl from '../components/NumberControl.jsx';
 
-export default function CalculatorView({ volumeItems, costGroups, calculatorInputs, updateCalculatorValue, calculatorResult, onLockIn }) {
+export default function CalculatorView({ volumeItems, costGroups, calculatorInputs, updateCalculatorValue, calculatorResult, onLockIn, onReset }) {
   return (
     <div className="shell">
       <section className="hero">
@@ -21,10 +21,17 @@ export default function CalculatorView({ volumeItems, costGroups, calculatorInpu
         <aside className="panel sidebar">
           <div className="head">
             <h2 className="lever-heading">Sample Levers</h2>
+            <button
+              type="button"
+              className="reset-scenario-btn"
+              onClick={onReset}
+            >
+              Reset
+            </button>
           </div>
           <div className="controls">
             {costGroups.map((groupObj) => (
-              <details className={`accordion cat-${categoryClass(groupObj.group)}`} key={groupObj.group}>
+              <details className={`accordion cat-${categoryClass(groupObj.group)}`} key={groupObj.group} open>
                 <summary>{groupObj.group} ({GROUP_ABBREV[groupObj.group]})</summary>
                 <div className="accordion-content">
                   {groupObj.items.map((item) => (

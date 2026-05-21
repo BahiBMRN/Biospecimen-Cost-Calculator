@@ -54,6 +54,12 @@ export default function StoreDisposeView() {
   const disposeResult = useMemo(() => calculateDisposal(disposeInputs), [disposeInputs]);
   const sdResult = useMemo(() => calculateStoreAndDispose(storeInputs, disposeInputs), [storeInputs, disposeInputs]);
 
+  const handleReset = () => {
+    setStoreInputsRaw(DEFAULT_STORE_INPUTS);
+    setDisposeInputsRaw(DEFAULT_DISPOSE_INPUTS);
+    setActiveSDTab('store');
+  };
+
   return (
     <div className="shell">
       <section className="hero">
@@ -73,6 +79,7 @@ export default function StoreDisposeView() {
           setStoreInputs={setStoreInputs}
           disposeInputs={disposeInputs}
           setDisposeInputs={setDisposeInputs}
+          onReset={handleReset}
         />
         <SDOutputPanel
           activeSDTab={activeSDTab}

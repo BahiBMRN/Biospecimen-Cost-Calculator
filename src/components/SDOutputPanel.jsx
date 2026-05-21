@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { SD_CONTAINER_SIZES, SD_FIXED_RATES, SD_SAMPLE_TYPES, SD_STORAGE_TEMPS } from '../constants.js';
 import { formatCurrency, formatCurrencyWhole } from '../utils.js';
 
@@ -188,6 +189,12 @@ function StoreAndDisposeOutput({ storeInputs, disposeInputs, sdResult }) {
 
 // ── Main Output Panel ─────────────────────────────────────────────────────────
 export default function SDOutputPanel({ activeSDTab, storeInputs, disposeInputs, storeResult, disposeResult, sdResult }) {
+  const [showCombined, setShowCombined] = useState(false);
+
+  useEffect(() => {
+    setShowCombined(false);
+  }, [activeSDTab]);
+
   return (
     <div className="panel sd-output-panel">
       <div className="sd-output-header">
@@ -201,7 +208,18 @@ export default function SDOutputPanel({ activeSDTab, storeInputs, disposeInputs,
           <DisposeOutput disposeInputs={disposeInputs} disposeResult={disposeResult} />
         )}
         {activeSDTab === 'storeAndDispose' && (
-          <StoreAndDisposeOutput storeInputs={storeInputs} disposeInputs={disposeInputs} sdResult={sdResult} />
+          <>
+            <button
+              type="button"
+              className={`sd-combined-btn${showCombined ? ' active' : ''}`}
+              onClick={() => setShowCombined((v) => !v)}
+            >
+              Store AND Dispose?
+            </button>
+            {showCombined && (
+              <StoreAndDisposeOutput storeInputs={storeInputs} disposeInputs={disposeInputs} sdResult={sdResult} />
+            )}
+          </>
         )}
       </div>
     </div>

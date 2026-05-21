@@ -70,6 +70,37 @@ export const SCENARIO_META = {
 
 export const DEFAULTS = Object.fromEntries(CONFIG.map((item) => [item.key, item.value]));
 
+// Startup defaults: study levers = 1, sample cost levers = 0
+// (except N_samples_ship and N_shipments which stay at 1)
+export const STARTUP_DEFAULTS = {
+  // Study levers (Volume)
+  N_subjects: 1,
+  N_visits: 1,
+  N_timepoints: 1,
+  N_aliquots: 1,
+  // Kitting & Site
+  K_kit: 0,
+  K_site: 0,
+  K_special: 0,
+  // Logistics
+  L_ship: 0,
+  N_samples_ship: 1,
+  N_shipments: 1,
+  L_accession: 0,
+  // Testing
+  T_process: 0,
+  T_test: 0,
+  T_data_total: 0,
+  // Storage
+  S_setup: 0,
+  S_rate: 0,
+  S_duration: 0,
+  // Disposal
+  D_retrieve: 0,
+  D_destroy: 0,
+  D_doc: 0,
+};
+
 export const GROUP_ABBREV = {
   'Kitting & Site': 'K',
   'Logistics': 'L',
