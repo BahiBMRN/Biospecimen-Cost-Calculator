@@ -208,7 +208,7 @@ function ReadOnlySummaryCards({ storeInputs, disposeInputs }) {
           <div className="sd-cost-tile">
             <div className="sd-cost-tile-label">Cost Per Sample</div>
             <div className="sd-cost-tile-value">
-              {formatCurrency(disposeResult.perSample)}
+              {disposeResult.perSample != null ? formatCurrency(disposeResult.perSample) : <span className="sd-cost-tile-empty">—</span>}
             </div>
           </div>
           <div className="sd-cost-tile sd-cost-tile--total">
