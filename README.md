@@ -74,7 +74,6 @@ Input model includes 20 configurable levers grouped by:
 - No backend or external API integrations
 - In-memory React state only (`calculatorInputs`, `lockedInputs`, `scenarioInputs`, `activeScenario`, `activeTab`)
 - No persistence layer (no database, queue, or local storage) [Coming Later]
-- PWA manifest present (`public/manifest.json`) — progressive web app installability configured
 
 ## Quality and Current State
 
