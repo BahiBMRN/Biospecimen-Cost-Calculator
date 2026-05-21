@@ -95,11 +95,17 @@ function DisposeOutput({ disposeInputs, disposeResult }) {
       <div className="sd-output-section">
         <div className="sd-output-section-title">Formula</div>
         <div className="sd-formula-display">
-          <FormulaLine>Registration Rate + Disposal Rate</FormulaLine>
-          <FormulaLine>
-            {formatCurrency(SD_FIXED_RATES.registration)} + {formatCurrency(SD_FIXED_RATES.disposal)}
-          </FormulaLine>
-          <FormulaLine>= <strong>{formatCurrency(perSample)} / sample</strong></FormulaLine>
+          {perSample != null ? (
+            <>
+              <FormulaLine>Registration Rate + Disposal Rate</FormulaLine>
+              <FormulaLine>
+                {formatCurrency(SD_FIXED_RATES.registration)} + {formatCurrency(SD_FIXED_RATES.disposal)}
+              </FormulaLine>
+              <FormulaLine>= <strong>{formatCurrency(perSample)} / sample</strong></FormulaLine>
+            </>
+          ) : (
+            <span className="sd-validation-msg">Select sample type or container size to see the formula.</span>
+          )}
         </div>
       </div>
 

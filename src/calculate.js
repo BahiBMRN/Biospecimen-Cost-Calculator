@@ -81,7 +81,10 @@ export function calculateStorage({ containerSize, storageTemp, storageDuration, 
  * @param {{ totalSamples: string|number }} inputs
  * @returns {{ perSample: number, totalStudy: number|null }}
  */
-export function calculateDisposal({ totalSamples }) {
+export function calculateDisposal({ sampleType, containerSize, totalSamples }) {
+  if (!sampleType && !containerSize) {
+    return { perSample: null, totalStudy: null };
+  }
   const perSample = SD_FIXED_RATES.registration + SD_FIXED_RATES.disposal;
   const n = Number(totalSamples);
   const totalStudy = n > 0 ? perSample * n : null;
