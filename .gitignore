@@ -90,3 +90,6 @@ desktop.ini
 *.tmp
 *.old
 *.orig
+
+*.claude
+*.github

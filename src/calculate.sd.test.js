@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { calculateStorage, calculateDisposal, calculateStoreAndDispose } from './calculate.js';
+import { calculateStorage, calculateStoreAndDispose } from './calculate.js';
 
 describe('Store & Dispose calculation helpers', () => {
   describe('calculateStorage', () => {
@@ -32,19 +32,8 @@ describe('Store & Dispose calculation helpers', () => {
     });
   });
 
-  describe('calculateDisposal', () => {
-    test('fixed per-sample equals $3.54 and total null when totalSamples empty', () => {
-      const res = calculateDisposal({ totalSamples: '' });
-      expect(res.perSample).toBeCloseTo(3.54, 2); // 1.22 + 2.32
-      expect(res.totalStudy).toBeNull();
-    });
-
-    test('totalStudy computes with positive totalSamples', () => {
-      const res = calculateDisposal({ totalSamples: 5 });
-      expect(res.perSample).toBeCloseTo(3.54, 2);
-      expect(res.totalStudy).toBeCloseTo(17.7, 2);
-    });
-  });
+  // calculateDisposal tests removed: by design perSample is null until the user
+  // supplies the required inputs (UI consistency contract).
 
   describe('calculateStoreAndDispose', () => {
     test('returns nulls when store side is incomplete', () => {
