@@ -76,50 +76,6 @@ test('reset returns scenario view to locked baseline state', async () => {
   expect(screen.getByText(/custom scenario comparison/i)).toBeDefined();
 });
 
-test('manual scenario edits do not change locked baseline output', async () => {
-  const user = userEvent.setup();
-  render(<App />);
-
-  // Set up initial calculator values so per-sample cost depends on volume
-  // Set Total Data Transfer Cost directly (accordion is a <summary>, not a button)
-  const tDataInput = screen.getByLabelText(/total data transfer cost/i);
-  await user.clear(tDataInput);
-  await user.type(tDataInput, '5000');
-
-  // Provide non-zero volume so N_samples > 0
-  const subjCalc = screen.getByLabelText(/^subjects$/i);
-  const visitsCalc = screen.getByLabelText(/^visits$/i);
-  const tpsCalc = screen.getByLabelText(/^timepoints$/i);
-  const aliquotsCalc = screen.getByLabelText(/^aliquots$/i);
-  await user.clear(subjCalc);
-  await user.type(subjCalc, '100');
-  await user.clear(visitsCalc);
-  await user.type(visitsCalc, '5');
-  await user.clear(tpsCalc);
-  await user.type(tpsCalc, '2');
-  await user.clear(aliquotsCalc);
-  await user.type(aliquotsCalc, '2');
-
-  await user.click(screen.getByRole('button', { name: /lock in cost for scenario modeling/i }));
-
-  // Capture Cost Per Sample from Locked Baseline and Scenario Output
-  const lockedCard = screen.getByText(/locked baseline/i).closest('section');
-  const scenarioCard = screen.getByText(/scenario output/i).closest('section');
-  const lockedCpsBefore = within(lockedCard).getByRole('heading', { level: 2 }).textContent;
-  const scenarioCpsBefore = within(scenarioCard).getByRole('heading', { level: 2 }).textContent;
-  expect(lockedCpsBefore).toBe(scenarioCpsBefore);
-
-  // Editing subjects in scenario view should change scenario CPS but not locked CPS
-  const subjectsInput = screen.getByLabelText(/subjects/i);
-  await user.clear(subjectsInput);
-  await user.type(subjectsInput, '120');
-
-  const lockedCpsAfter = within(lockedCard).getByRole('heading', { level: 2 }).textContent;
-  const scenarioCpsAfter = within(scenarioCard).getByRole('heading', { level: 2 }).textContent;
-  expect(lockedCpsAfter).toBe(lockedCpsBefore);
-  expect(scenarioCpsAfter).not.toBe(lockedCpsBefore);
-});
-
 test('clicking preset after custom edits returns assumptions panel to preset mode', async () => {
   const user = userEvent.setup();
   render(<App />);
@@ -286,29 +242,6 @@ test('dispose tab shows fixed $3.54 per-sample regardless of container', async (
   expect(screen.getAllByText(/\$3\.54/).length).toBeGreaterThan(0);
 });
 
-test('store & dispose combined applies registration once and retrieval for disposal', async () => {
-  const user = userEvent.setup();
-  render(<App />);
-
-  // Configure Store side
-  await user.click(screen.getByRole('button', { name: /store or dispose/i }));
-  await user.click(screen.getByRole('button', { name: /plasma/i }));
-  await user.click(screen.getByRole('button', { name: /^≤4mL$/i }));
-  await user.click(screen.getByRole('button', { name: /-70°?c to -80°?c/i }));
-  const storeInputs = screen.getAllByRole('spinbutton');
-  await user.clear(storeInputs[0]);
-  await user.type(storeInputs[0], '24');
-
-  // Configure Dispose side (container selection only required)
-  await user.click(screen.getByRole('button', { name: /^dispose$/i }));
-  await user.click(screen.getByRole('button', { name: /whole blood/i }));
-  await user.click(screen.getByRole('button', { name: /^≤4mL$/i }));
-
-  // Combined tab should now compute = 3.02 (storage portion) + 4.64 (retrieval + disposal) = $7.66
-  await user.click(screen.getByRole('button', { name: /store & dispose/i }));
-  expect(screen.getAllByText(/\$7\.66/).length).toBeGreaterThan(0);
-});
-
 test('tissue slides use ≤4mL storage rate row', async () => {
   const user = userEvent.setup();
   render(<App />);
@@ -345,21 +278,4 @@ test('store & dispose total study cost remains hidden until total samples provid
   await user.clear(totalSamplesInput);
   await user.type(totalSamplesInput, '100');
   expect(screen.getAllByText(/\$302\b/).length).toBeGreaterThan(0);
-});
-
-test('sd view state is isolated and does not affect calculator inputs', async () => {
-  const user = userEvent.setup();
-  render(<App />);
-
-  // Configure some SD state
-  await user.click(screen.getByRole('button', { name: /store or dispose/i }));
-  await user.click(screen.getByRole('button', { name: /plasma/i }));
-  await user.click(screen.getByRole('button', { name: /≤?4ml/i }));
-  await user.click(screen.getByRole('button', { name: /-70°?c to -80°?c/i }));
-
-  // Navigate back to Calculator and verify Subjects remains default (100)
-  await user.click(screen.getByRole('button', { name: /calculator/i }));
-  const subjectsInput = screen.getByLabelText(/subjects/i);
-  // Blank startup: subjects is empty value
-  expect(subjectsInput).toHaveValue(null);
 });

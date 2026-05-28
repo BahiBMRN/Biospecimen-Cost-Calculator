@@ -38,7 +38,7 @@ export default function CostComposition({ result, variant = 'default', showLockB
         </div>
         {!isCalculatorView && (
           <div className="donut-area">
-            <ResponsiveContainer width="100%" height="100%" minWidth={220} minHeight={220}>
+            <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie data={pieData} dataKey="value" innerRadius={54} outerRadius={78} paddingAngle={2}>
                   {pieData.map((entry) => (
