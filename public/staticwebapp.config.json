@@ -1,0 +1,51 @@
+{
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": [
+      "/assets/*",
+      "/*.{css,js,svg,png,jpg,jpeg,gif,ico,json,txt,xml,webmanifest}"
+    ]
+  },
+  "routes": [
+    {
+      "route": "/*",
+      "allowedRoles": ["authenticated"]
+    }
+  ],
+  "responseOverrides": {
+    "401": {
+      "statusCode": 302,
+      "redirect": "/.auth/login/aad"
+    }
+  },
+  "networking": {
+    "allowedIpRanges": [
+      "50.227.28.2/32",
+      "50.205.16.163/32",
+      "209.112.96.100/32",
+      "50.201.43.50/32",
+      "12.18.66.26/32",
+      "4.16.138.0/24",
+      "38.32.111.171/32",
+      "83.71.194.190/32",
+      "89.100.116.129/32",
+      "157.125.167.34/32",
+      "88.211.69.254/32",
+      "208.127.0.0/16",
+      "165.1.0.0/16",
+      "134.238.0.0/16",
+      "130.41.0.0/16",
+      "137.83.0.0/16",
+      "52.211.153.1/32",
+      "52.211.201.237/32",
+      "52.50.214.142/32",
+      "52.31.189.153/32",
+      "66.159.216.136/32"
+    ]
+  },
+  "globalHeaders": {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "strict-origin-when-cross-origin"
+  }
+}
