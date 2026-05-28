@@ -43,6 +43,12 @@
       "66.159.216.136/32"
     ]
   },
+  "mimeTypes": {
+    ".js": "text/javascript",
+    ".mjs": "text/javascript",
+    ".css": "text/css",
+    ".json": "application/json"
+  },
   "globalHeaders": {
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
