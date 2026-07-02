@@ -2,9 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { CONFIG, PRESETS, STARTUP_DEFAULTS } from './constants.js';
 import { calculate } from './calculate.js';
 import { clamp } from './utils.js';
+import { deleteCustomPreset, loadCustomPresets, saveCustomPreset } from './presets/customPresets.js';
 import CalculatorView from './views/CalculatorView.jsx';
 import ScenariosView from './views/ScenariosView.jsx';
 import StoreDisposeView from './views/StoreDisposeView.jsx';
+import TieredAssaysView from './views/TieredAssaysView.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import './App.css';
 
@@ -14,6 +16,7 @@ function App() {
   const [lockedInputs, setLockedInputs] = useState(null);
   const [scenarioInputs, setScenarioInputs] = useState(null);
   const [activeScenario, setActiveScenario] = useState(null);
+  const [customPresets, setCustomPresets] = useState(() => loadCustomPresets());
 
   const volumeItems = useMemo(() => CONFIG.filter((item) => item.category === 'Volume'), []);
   const costGroups = useMemo(() => {
@@ -118,12 +121,34 @@ function App() {
     setCalculatorInputs({ ...STARTUP_DEFAULTS });
   };
 
+  const patchCalculatorInputs = (patch) => {
+    setCalculatorInputs((current) => ({ ...current, ...patch }));
+  };
+
+  const patchScenarioInputs = (patch) => {
+    setActiveScenario(null);
+    setScenarioInputs((current) => ({ ...(current ?? lockedBaselineInputs), ...patch }));
+  };
+
   const lockCostForScenarioModeling = () => {
     const baseline = { ...calculatorInputs };
     setLockedInputs(baseline);
     setScenarioInputs(baseline);
     setActiveScenario(null);
     setActiveTab('scenarios');
+  };
+
+  const saveCurrentAsPreset = (name, inputs) => {
+    setCustomPresets(saveCustomPreset(name, inputs));
+  };
+
+  const removeCustomPreset = (id) => {
+    setCustomPresets(deleteCustomPreset(id));
+  };
+
+  const applyCustomPreset = (preset) => {
+    setActiveScenario(`custom:${preset.id}`);
+    setScenarioInputs({ ...preset.inputs });
   };
 
   return (
@@ -160,6 +185,9 @@ function App() {
         <button className={activeTab === 'wif' ? 'tab-btn active' : 'tab-btn'} onClick={() => setActiveTab('wif')}>
           Store or Dispose
         </button>
+        <button className={activeTab === 'tiered' ? 'tab-btn active' : 'tab-btn'} onClick={() => setActiveTab('tiered')}>
+          Tiered Assays
+        </button>
       </nav>
 
       {activeTab === 'calculator' && (
@@ -171,6 +199,8 @@ function App() {
           calculatorResult={calculatorResult}
           onLockIn={lockCostForScenarioModeling}
           onReset={resetCalculatorToStartup}
+          onPatch={patchCalculatorInputs}
+          onSavePreset={saveCurrentAsPreset}
         />
       )}
 
@@ -185,10 +215,17 @@ function App() {
           activeScenario={activeScenario}
           applyScenario={applyScenario}
           resetScenarioToLocked={resetScenarioToLocked}
+          onPatchScenario={patchScenarioInputs}
+          onSavePreset={saveCurrentAsPreset}
+          customPresets={customPresets}
+          applyCustomPreset={applyCustomPreset}
+          removeCustomPreset={removeCustomPreset}
         />
       )}
 
       {activeTab === 'wif' && <StoreDisposeView />}
+
+      {activeTab === 'tiered' && <TieredAssaysView />}
     </div>
     </ErrorBoundary>
   );

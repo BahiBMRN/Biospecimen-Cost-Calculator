@@ -1,11 +1,26 @@
 import { GROUP_ABBREV } from '../constants.js';
 import { categoryClass } from '../utils.js';
+import { buildCalculatorExportModel } from '../export/exportModel.js';
+import { exportToExcel } from '../export/excelExport.js';
+import { exportNodeToPng } from '../export/imageExport.js';
 import AssumptionsCaveats from '../components/AssumptionsCaveats.jsx';
 import BreakdownChart from '../components/BreakdownChart.jsx';
 import CostComposition from '../components/CostComposition.jsx';
+import ExpeditePanel from '../components/ExpeditePanel.jsx';
+import ExportToolbar from '../components/ExportToolbar.jsx';
 import NumberControl from '../components/NumberControl.jsx';
+import RegionPanel from '../components/RegionPanel.jsx';
 
-export default function CalculatorView({ volumeItems, costGroups, calculatorInputs, updateCalculatorValue, calculatorResult, onLockIn, onReset }) {
+export default function CalculatorView({ volumeItems, costGroups, calculatorInputs, updateCalculatorValue, calculatorResult, onLockIn, onReset, onPatch, onSavePreset }) {
+  const handleExportExcel = () => {
+    const model = buildCalculatorExportModel(calculatorInputs, calculatorResult);
+    exportToExcel(model, 'bslcc-calculator.xlsx');
+  };
+
+  const handleExportImage = () => {
+    exportNodeToPng('calcCaptureRoot', 'bslcc-calculator.png');
+  };
+
   return (
     <div className="shell">
       <section className="hero">
@@ -15,6 +30,11 @@ export default function CalculatorView({ volumeItems, costGroups, calculatorInpu
           Model the cost of biospecimen collections for the lifetime of the study by adjusting the below parameters to view cost impacts in real time
           <span className="hero-dot" style={{ marginRight: 0, marginLeft: 10 }} />
         </p>
+        <ExportToolbar
+          onExcel={handleExportExcel}
+          onImage={handleExportImage}
+          onSavePreset={onSavePreset ? (name) => onSavePreset(name, calculatorInputs) : undefined}
+        />
       </section>
 
       <div className="layout">
@@ -49,7 +69,7 @@ export default function CalculatorView({ volumeItems, costGroups, calculatorInpu
           </div>
         </aside>
 
-        <main className="main-grid">
+        <main className="main-grid" id="calcCaptureRoot">
           <section className="panel">
             <div className="head">
               <h3 className="lever-heading">Study Levers</h3>
@@ -64,6 +84,10 @@ export default function CalculatorView({ volumeItems, costGroups, calculatorInpu
                   lockHint="To Change Variables Use Calculator"
                 />
               ))}
+            </div>
+            <div className="controls volume-grid">
+              <RegionPanel inputs={calculatorInputs} onPatch={onPatch} />
+              <ExpeditePanel inputs={calculatorInputs} onPatch={onPatch} />
             </div>
           </section>
 
