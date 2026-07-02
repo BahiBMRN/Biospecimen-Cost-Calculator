@@ -1,6 +1,10 @@
 import { useMemo, useState } from 'react';
 import { SD_SAMPLE_TYPE_CONTAINERS } from '../constants.js';
 import { calculateDisposal, calculateStorage, calculateStoreAndDispose } from '../calculate.js';
+import { buildSdExportModel } from '../export/exportModel.js';
+import { exportToExcel } from '../export/excelExport.js';
+import { exportNodeToPng } from '../export/imageExport.js';
+import ExportToolbar from '../components/ExportToolbar.jsx';
 import SDConfigPanel from '../components/SDConfigPanel.jsx';
 import SDOutputPanel from '../components/SDOutputPanel.jsx';
 
@@ -60,6 +64,15 @@ export default function StoreDisposeView() {
     setActiveSDTab('store');
   };
 
+  const handleExportExcel = () => {
+    const model = buildSdExportModel(activeSDTab, storeInputs, disposeInputs, storeResult, disposeResult, sdResult);
+    exportToExcel(model, 'bslcc-store-or-dispose.xlsx');
+  };
+
+  const handleExportImage = () => {
+    exportNodeToPng('sdCaptureRoot', 'bslcc-store-or-dispose.png');
+  };
+
   return (
     <div className="shell">
       <section className="hero">
@@ -69,6 +82,7 @@ export default function StoreDisposeView() {
           Compare and contrast Biospecimen Storage &amp; Disposal strategies
           <span className="hero-dot" style={{ marginRight: 0, marginLeft: 10 }} />
         </p>
+        <ExportToolbar onExcel={handleExportExcel} onImage={handleExportImage} />
       </section>
 
       <div className="layout sd-layout">
@@ -81,14 +95,16 @@ export default function StoreDisposeView() {
           setDisposeInputs={setDisposeInputs}
           onReset={handleReset}
         />
-        <SDOutputPanel
-          activeSDTab={activeSDTab}
-          storeInputs={storeInputs}
-          disposeInputs={disposeInputs}
-          storeResult={storeResult}
-          disposeResult={disposeResult}
-          sdResult={sdResult}
-        />
+        <div id="sdCaptureRoot">
+          <SDOutputPanel
+            activeSDTab={activeSDTab}
+            storeInputs={storeInputs}
+            disposeInputs={disposeInputs}
+            storeResult={storeResult}
+            disposeResult={disposeResult}
+            sdResult={sdResult}
+          />
+        </div>
       </div>
     </div>
   );

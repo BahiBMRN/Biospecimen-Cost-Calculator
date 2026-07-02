@@ -99,6 +99,23 @@ export const STARTUP_DEFAULTS = {
   D_retrieve: 0,
   D_destroy: 0,
   D_doc: 0,
+  // Region (Feature: regional cost differences)
+  region: 'us',
+  // Fine-tune overrides for the selected region's per-category multipliers.
+  // null = "not customized" -> effective factor tracks the selected region's
+  // live preset. Editing a fine-tune field sets an explicit sticky override
+  // for that field only; selecting a different region clears all overrides
+  // back to null so the new region's preset takes effect immediately.
+  region_factor_K: null,
+  region_factor_L: null,
+  region_factor_T: null,
+  region_factor_S: null,
+  region_factor_D: null,
+  // Expedite (Feature: expedited cost modeling)
+  expedite_enabled: false,
+  expedite_shipping_pct: 0,
+  expedite_testing_pct: 0,
+  expedite_reporting_pct: 0,
 };
 
 export const GROUP_ABBREV = {
@@ -107,6 +124,47 @@ export const GROUP_ABBREV = {
   'Testing': 'T',
   'Storage': 'S',
   'Disposal': 'D',
+};
+
+// ── Regional Cost Differences ───────────────────────────────────────────────
+// Per-category multipliers applied to K/L/T/S/D. 'us' is the neutral baseline
+// (all factors = 1.0) so omitting/selecting it reproduces original output exactly.
+export const REGIONS = [
+  { key: 'us', label: 'United States (Baseline)', factors: { K: 1, L: 1, T: 1, S: 1, D: 1 } },
+  { key: 'eu', label: 'European Union', factors: { K: 1.05, L: 1.15, T: 1.10, S: 1.08, D: 1.05 } },
+  { key: 'apac', label: 'Asia-Pacific', factors: { K: 0.90, L: 1.25, T: 0.85, S: 0.95, D: 0.90 } },
+  { key: 'latam', label: 'Latin America', factors: { K: 0.85, L: 1.30, T: 0.80, S: 0.90, D: 0.85 } },
+];
+
+// ── Expedited Cost Modeling ─────────────────────────────────────────────────
+// Percentage surcharges applied to shipping (freight portion of L), testing
+// (T_process + T_test), and reporting (T_data). 'standard' is neutral (0%).
+export const EXPEDITE_TIERS = {
+  standard: { label: 'Standard', shipping: 0, testing: 0, reporting: 0 },
+  expedited: { label: 'Expedited', shipping: 40, testing: 25, reporting: 15 },
+  critical: { label: 'Critical / Rush', shipping: 80, testing: 50, reporting: 30 },
+};
+
+// ── Tiered Assays Pivot Point Module Constants ──────────────────────────────
+// Standalone tab: local state only, independent of the cost-model inputs above.
+export const TIERED_TIER_LABELS = {
+  screen: 'Screen',
+  confirm: 'Confirm',
+  titer: 'Titer',
+};
+
+export const TIERED_DEFAULTS = {
+  screenCost: 15,
+  confirmCost: 120,
+  titerCost: 180,
+  screenTat: 3,
+  confirmTat: 7,
+  titerTat: 10,
+  confirmPosPct: 60,
+  currentScreenPosPct: 15,
+  flatAssayCost: 80,
+  flatTat: 12,
+  totalSamples: '',
 };
 
 // ── Store & Dispose Module Constants ────────────────────────────────────────
