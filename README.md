@@ -21,7 +21,7 @@ The model computes:
 
 Cost formulas:
 
-- `N_samples = N_subjects * N_visits * N_timepoints * N_aliquots`
+- `N_samples = N_participants * N_visits * N_timepoints * N_aliquots`
 - `C_sample = K + L + T + S + D`
 - `TRUE_COST = C_sample * N_samples`
 
@@ -81,7 +81,7 @@ Input model includes 20 configurable levers grouped by:
 - **Structural refactor complete:** logic decomposed into `constants.js`, `utils.js`, `calculate.js`, dedicated components, and view-level modules
 - **Pure calculation layer:** exported `calculate()` and Store & Dispose helpers are isolated and unit-testable with no side effects
 - **Defensive math:** zero-volume, zero-denominator, and zero-baseline edge cases handled throughout
-- Automated tests: 12 test cases covering lock/unlock flow, preset application, reset behavior, delta sidebar rendering, zero-baseline percent guard, zero-volume output correctness, and `T_data_total` normalization
+- Automated tests: 28 test cases covering lock/unlock flow, preset application, reset behavior, delta sidebar rendering, zero-baseline percent guard, zero-volume output correctness, `T_data_total` normalization, and Store & Dispose workflows
 - Notes: Recharts emits dimension warnings in jsdom during tests; these are non-fatal.
 
 ## Code Locations

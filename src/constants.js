@@ -1,7 +1,7 @@
 export const COLORS = ['#70e1ff', '#9a7cff', '#64f0a8', '#ffd166', '#ff7b8a'];
 
 export const CONFIG = [
-  { key: 'N_subjects', label: 'Subjects', category: 'Volume', min: 1, max: 2000, step: 1, value: 100 },
+  { key: 'N_participants', label: 'Participants', category: 'Volume', min: 1, max: 2000, step: 1, value: 100 },
   { key: 'N_visits', label: 'Visits', category: 'Volume', min: 1, max: 40, step: 1, value: 5 },
   { key: 'N_timepoints', label: 'Timepoints', category: 'Volume', min: 1, max: 20, step: 1, value: 2 },
   { key: 'N_aliquots', label: 'Aliquots', category: 'Volume', min: 1, max: 10, step: 1, value: 2 },
@@ -74,7 +74,7 @@ export const DEFAULTS = Object.fromEntries(CONFIG.map((item) => [item.key, item.
 // (except N_samples_ship and N_shipments which stay at 1)
 export const STARTUP_DEFAULTS = {
   // Study levers (Volume)
-  N_subjects: 1,
+  N_participants: 1,
   N_visits: 1,
   N_timepoints: 1,
   N_aliquots: 1,

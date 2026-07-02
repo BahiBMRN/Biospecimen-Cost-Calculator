@@ -6,7 +6,7 @@ import { calculate } from './calculate';
 
 function makeInputs(overrides = {}) {
   return {
-    N_subjects: 100,
+    N_participants: 100,
     N_visits: 5,
     N_timepoints: 2,
     N_aliquots: 2,
@@ -36,6 +36,15 @@ test('renders biospecimen calculator heading', () => {
   expect(headingElement).toBeDefined();
 });
 
+test('calculator opens only kitting and site sample levers by default', () => {
+  const { container } = render(<App />);
+
+  const sampleLeverControls = container.querySelector('.sidebar .controls');
+  const calculatorAccordions = Array.from(sampleLeverControls.querySelectorAll(':scope > details'));
+
+  expect(calculatorAccordions.map((details) => details.open)).toEqual([true, false, false, false, false]);
+});
+
 test('locks values from calculator and opens what-if with baseline and scenario cards', async () => {
   const user = userEvent.setup();
   render(<App />);
@@ -54,14 +63,62 @@ test('what-if controls are editable and manual edits switch assumptions to custo
 
   await user.click(screen.getByRole('button', { name: /what-if scenarios/i }));
 
-  const subjectsInput = screen.getByLabelText(/subjects/i);
-  expect(subjectsInput.disabled).toBe(false);
+  const participantsInput = screen.getByLabelText(/participants/i);
+  expect(participantsInput.disabled).toBe(false);
 
-  await user.clear(subjectsInput);
-  await user.type(subjectsInput, '120');
+  await user.clear(participantsInput);
+  await user.type(participantsInput, '120');
 
   expect(screen.getByText(/custom scenario comparison/i)).toBeDefined();
   expect(screen.getByText(/this view reflects your custom configured lever values/i)).toBeDefined();
+});
+
+test('what-if left sidebar orders levers before presets', async () => {
+  const user = userEvent.setup();
+  const { container } = render(<App />);
+
+  await user.click(screen.getByRole('button', { name: /what-if scenarios/i }));
+
+  const leftSidebar = container.querySelector('#scenarioLeftSidebar');
+  const sectionIds = Array.from(leftSidebar.children).map((section) => section.id);
+
+  expect(sectionIds).toEqual(['scenarioStudyLeversPanel', 'scenarioSampleLeversPanel', 'scenarioBtnPanel']);
+});
+
+test('what-if sidebar default accordion state matches requested workflow', async () => {
+  const user = userEvent.setup();
+  const { container } = render(<App />);
+
+  await user.click(screen.getByRole('button', { name: /what-if scenarios/i }));
+
+  const studyLevers = container.querySelector('#scenarioStudyLeversPanel details');
+  const sampleLevers = container.querySelector('#scenarioSampleLeversPanel .scenario-sample-levers');
+  const sampleCategories = Array.from(container.querySelectorAll('#scenarioSampleLeversPanel .scenario-sample-levers > .accordion-content > details'));
+  const presets = container.querySelector('#scenarioBtnPanel details');
+
+  expect(studyLevers.open).toBe(true);
+  expect(sampleLevers.open).toBe(true);
+  expect(sampleCategories.every((details) => details.open === false)).toBe(true);
+  expect(presets.open).toBe(false);
+});
+
+test('what-if reset button lives under total study cost delta', async () => {
+  const user = userEvent.setup();
+  const { container } = render(<App />);
+
+  await user.click(screen.getByRole('button', { name: /what-if scenarios/i }));
+
+  const studyLeversPanel = container.querySelector('#scenarioStudyLeversPanel');
+  const presetsPanel = container.querySelector('#scenarioBtnPanel');
+  const rightSidebar = container.querySelector('#scenarioRightSidebar');
+  const totalDeltaCard = within(rightSidebar).getByTestId('total-study-delta-card');
+  const resetButton = within(rightSidebar).getByRole('button', { name: /^reset$/i });
+
+  expect(totalDeltaCard).toBeDefined();
+  expect(resetButton).toBeDefined();
+  expect(totalDeltaCard.nextElementSibling).toBe(resetButton);
+  expect(within(studyLeversPanel).queryByRole('button', { name: /^reset$/i })).toBeNull();
+  expect(within(presetsPanel).queryByRole('button', { name: /^reset$/i })).toBeNull();
 });
 
 test('reset returns scenario view to locked baseline state', async () => {
@@ -76,15 +133,79 @@ test('reset returns scenario view to locked baseline state', async () => {
   expect(screen.getByText(/custom scenario comparison/i)).toBeDefined();
 });
 
+test('manual scenario edits do not change locked baseline output', async () => {
+  const user = userEvent.setup();
+  render(<App />);
+
+  // Set up initial calculator values so total study cost depends on volume.
+  const kitInput = screen.getByLabelText(/kit cost per sample/i);
+  await user.clear(kitInput);
+  await user.type(kitInput, '10');
+
+  // Set Total Data Transfer Cost directly (accordion is a <summary>, not a button)
+  const tDataInput = screen.getByLabelText(/total data transfer cost/i);
+  await user.clear(tDataInput);
+  await user.type(tDataInput, '5000');
+
+  // Provide non-zero volume so N_samples > 0
+  const participantCalc = screen.getByLabelText(/^participants$/i);
+  const visitsCalc = screen.getByLabelText(/^visits$/i);
+  const tpsCalc = screen.getByLabelText(/^timepoints$/i);
+  const aliquotsCalc = screen.getByLabelText(/^aliquots$/i);
+  await user.clear(participantCalc);
+  await user.type(participantCalc, '100');
+  await user.clear(visitsCalc);
+  await user.type(visitsCalc, '5');
+  await user.clear(tpsCalc);
+  await user.type(tpsCalc, '2');
+  await user.clear(aliquotsCalc);
+  await user.type(aliquotsCalc, '2');
+
+  await user.click(screen.getByRole('button', { name: /lock in cost for scenario modeling/i }));
+
+  // Capture prominent Total Study Cost from Locked Baseline and Scenario Output.
+  const lockedCard = screen.getByText(/locked baseline/i).closest('section');
+  const scenarioCard = screen.getByText(/scenario output/i).closest('section');
+  const lockedTotalBefore = within(lockedCard).getByRole('heading', { level: 2 }).textContent;
+  const scenarioTotalBefore = within(scenarioCard).getByRole('heading', { level: 2 }).textContent;
+  expect(lockedTotalBefore).toBe(scenarioTotalBefore);
+
+  // Editing participants in scenario view should change scenario total but not locked total.
+  const participantsInput = screen.getByLabelText(/participants/i);
+  await user.clear(participantsInput);
+  await user.type(participantsInput, '120');
+
+  const lockedTotalAfter = within(lockedCard).getByRole('heading', { level: 2 }).textContent;
+  const scenarioTotalAfter = within(scenarioCard).getByRole('heading', { level: 2 }).textContent;
+  expect(lockedTotalAfter).toBe(lockedTotalBefore);
+  expect(scenarioTotalAfter).not.toBe(lockedTotalBefore);
+});
+
+test('what-if cards feature total study cost and keep cost per sample in the metric row', async () => {
+  const user = userEvent.setup();
+  render(<App />);
+
+  await user.click(screen.getByRole('button', { name: /what-if scenarios/i }));
+
+  const lockedCard = screen.getByText(/locked baseline/i).closest('section');
+  const totalScoreBox = lockedCard.querySelector('.score-box--scenario-total');
+  expect(within(lockedCard).getByText(/total collection study cost/i)).toBeDefined();
+  expect(within(lockedCard).getByRole('heading', { level: 2 }).textContent).toMatch(/^\$/);
+  expect(totalScoreBox).toBeDefined();
+  const sampleCostMetric = lockedCard.querySelector('.metric-important--cps');
+  expect(sampleCostMetric.textContent).toContain('CostPerSample');
+  expect(sampleCostMetric.querySelector('.cps-value').textContent).toMatch(/^\$/);
+});
+
 test('clicking preset after custom edits returns assumptions panel to preset mode', async () => {
   const user = userEvent.setup();
   render(<App />);
 
   await user.click(screen.getByRole('button', { name: /what-if scenarios/i }));
 
-  const subjectsInput = screen.getByLabelText(/subjects/i);
-  await user.clear(subjectsInput);
-  await user.type(subjectsInput, '130');
+  const participantsInput = screen.getByLabelText(/participants/i);
+  await user.clear(participantsInput);
+  await user.type(participantsInput, '130');
   expect(screen.getByText(/custom scenario comparison/i)).toBeDefined();
 
   const presetButton = screen.getByRole('button', { name: /direct to central lab analysis -> residual lts/i });
@@ -122,7 +243,7 @@ test('total study delta percent handles zero baseline safely', () => {
 
   const baseline = calculate(
     makeInputs({
-      N_subjects: 1,
+      N_participants: 1,
       N_visits: 1,
       N_timepoints: 1,
       N_aliquots: 1,
@@ -145,14 +266,14 @@ test('total study delta percent handles zero baseline safely', () => {
     })
   );
 
-  const scenario = calculate(makeInputs({ N_subjects: 1, N_visits: 1, N_timepoints: 1, N_aliquots: 1, K_kit: 10, K_site: 0, K_special: 0, L_ship: 0, N_samples_ship: 1, N_shipments: 1, L_accession: 0, T_process: 0, T_test: 0, T_data_total: 0, S_setup: 0, S_rate: 0, S_duration: 0, D_retrieve: 0, D_destroy: 0, D_doc: 0 }));
+  const scenario = calculate(makeInputs({ N_participants: 1, N_visits: 1, N_timepoints: 1, N_aliquots: 1, K_kit: 10, K_site: 0, K_special: 0, L_ship: 0, N_samples_ship: 1, N_shipments: 1, L_accession: 0, T_process: 0, T_test: 0, T_data_total: 0, S_setup: 0, S_rate: 0, S_duration: 0, D_retrieve: 0, D_destroy: 0, D_doc: 0 }));
 
   expect(baseline.TRUE_COST).toBe(0);
   expect(scenario.TRUE_COST).toBeGreaterThan(0);
 });
 
 test('calculate returns zeroed outputs when total sample volume is zero', () => {
-  const result = calculate(makeInputs({ N_subjects: 0 }));
+  const result = calculate(makeInputs({ N_participants: 0 }));
 
   expect(result.N_samples).toBe(0);
   expect(result.C_sample).toBe(0);
@@ -167,7 +288,7 @@ test('calculate returns zeroed outputs when total sample volume is zero', () => 
 });
 
 test('calculate keeps zero-volume data transfer from becoming per-sample charge', () => {
-  const result = calculate(makeInputs({ N_subjects: 0, T_data_total: 9000 }));
+  const result = calculate(makeInputs({ N_participants: 0, T_data_total: 9000 }));
 
   expect(result.N_samples).toBe(0);
   expect(result.T).toBe(0);
@@ -178,7 +299,7 @@ test('calculate keeps zero-volume data transfer from becoming per-sample charge'
 test('calculate handles zero samples-per-shipment defensively without NaN or Infinity', () => {
   const result = calculate(
     makeInputs({
-      N_subjects: 1,
+      N_participants: 1,
       N_visits: 1,
       N_timepoints: 1,
       N_aliquots: 2,
@@ -278,4 +399,21 @@ test('store & dispose total study cost remains hidden until total samples provid
   await user.clear(totalSamplesInput);
   await user.type(totalSamplesInput, '100');
   expect(screen.getAllByText(/\$302\b/).length).toBeGreaterThan(0);
+});
+
+test('sd view state is isolated and does not affect calculator inputs', async () => {
+  const user = userEvent.setup();
+  render(<App />);
+
+  // Configure some SD state
+  await user.click(screen.getByRole('button', { name: /store or dispose/i }));
+  await user.click(screen.getByRole('button', { name: /plasma/i }));
+  await user.click(screen.getByRole('button', { name: /≤?4ml/i }));
+  await user.click(screen.getByRole('button', { name: /-70°?c to -80°?c/i }));
+
+  // Navigate back to Calculator and verify Participants remains at startup default.
+  await user.click(screen.getByRole('button', { name: /calculator/i }));
+  const participantsInput = screen.getByLabelText(/participants/i);
+  // Startup study levers remain isolated from Store & Dispose state.
+  expect(participantsInput).toHaveValue(1);
 });

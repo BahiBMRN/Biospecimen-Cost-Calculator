@@ -32,7 +32,7 @@ const BothIcon = () => (
 const SD_TABS = [
   { key: 'store',          label: 'Store',           Icon: StoreIcon },
   { key: 'dispose',        label: 'Dispose',         Icon: DisposeIcon },
-  { key: 'storeAndDispose',label: 'Store Or Dispose',  Icon: BothIcon },
+  { key: 'storeAndDispose',label: 'Store & Dispose',  Icon: BothIcon },
 ];
 
 // ── Option row: large buttons (sample type) ──────────────────────────────────

@@ -2,7 +2,7 @@ import { COLORS, SD_FIXED_RATES, SD_STORAGE_RATES } from './constants.js';
 import { ceilDiv } from './utils.js';
 
 export function calculate(inputs) {
-  const N_samples = Number(inputs.N_subjects) * Number(inputs.N_visits) * Number(inputs.N_timepoints) * Number(inputs.N_aliquots);
+  const N_samples = Number(inputs.N_participants) * Number(inputs.N_visits) * Number(inputs.N_timepoints) * Number(inputs.N_aliquots);
 
   if (N_samples <= 0) {
     const segments = [
@@ -81,10 +81,7 @@ export function calculateStorage({ containerSize, storageTemp, storageDuration, 
  * @param {{ totalSamples: string|number }} inputs
  * @returns {{ perSample: number, totalStudy: number|null }}
  */
-export function calculateDisposal({ sampleType, containerSize, totalSamples }) {
-  if (!sampleType && !containerSize) {
-    return { perSample: null, totalStudy: null };
-  }
+export function calculateDisposal({ totalSamples }) {
   const perSample = SD_FIXED_RATES.registration + SD_FIXED_RATES.disposal;
   const n = Number(totalSamples);
   const totalStudy = n > 0 ? perSample * n : null;

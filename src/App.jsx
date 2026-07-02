@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CONFIG, DEFAULTS, PRESETS, STARTUP_DEFAULTS } from './constants.js';
+import { CONFIG, PRESETS, STARTUP_DEFAULTS } from './constants.js';
 import { calculate } from './calculate.js';
 import { clamp } from './utils.js';
 import CalculatorView from './views/CalculatorView.jsx';
@@ -50,7 +50,19 @@ function App() {
 
   const updateCalculatorValue = (key, rawValue) => {
     const item = CONFIG.find((entry) => entry.key === key);
-    if (!item || Number.isNaN(rawValue)) {
+    if (!item) {
+      return;
+    }
+
+    if (rawValue == null) {
+      setCalculatorInputs((current) => ({
+        ...current,
+        [key]: null,
+      }));
+      return;
+    }
+
+    if (Number.isNaN(rawValue)) {
       return;
     }
 
@@ -62,7 +74,20 @@ function App() {
 
   const updateScenarioValue = (key, rawValue) => {
     const item = CONFIG.find((entry) => entry.key === key);
-    if (!item || Number.isNaN(rawValue)) {
+    if (!item) {
+      return;
+    }
+
+    if (rawValue == null) {
+      setActiveScenario(null);
+      setScenarioInputs((current) => ({
+        ...(current ?? lockedBaselineInputs),
+        [key]: null,
+      }));
+      return;
+    }
+
+    if (Number.isNaN(rawValue)) {
       return;
     }
 

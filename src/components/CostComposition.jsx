@@ -19,20 +19,20 @@ export default function CostComposition({ result, variant = 'default', showLockB
   };
   const styleVariant = variantMap[variant] || variantMap.default;
 
-  const formattedTotal = isCalculatorView ? formatCurrencyWhole(result.TRUE_COST) : null;
+  const formattedTotal = formatCurrencyWhole(result.TRUE_COST);
 
   return (
     <section className={`panel result-card ${styleVariant.className}`}>
       {styleVariant.badge && <div className="result-card-badge-row"><div className="composition-badge">{styleVariant.badge}</div></div>}
       <div className={`result-grid${isCalculatorView ? ' result-grid--calculator' : ''}`}>
-        <div className={isCalculatorView ? 'score-box' : 'score-box--blue'}>
-          <div className="score-label">{isCalculatorView ? 'TOTAL COLLECTION STUDY COST' : 'Cost per sample'}</div>
+        <div className={`score-box${isCalculatorView ? '' : ' score-box--scenario-total'}`}>
+          <div className="score-label">TOTAL COLLECTION STUDY COST</div>
           {isCalculatorView ? (
             <h2 className="score-value" style={{ fontSize: getScoreValueFontSize(formattedTotal) }}>
               {formattedTotal}
             </h2>
           ) : (
-            <h2 className="score-value">{formatCurrency(result.C_sample)}</h2>
+            <h2 className="score-value">{formattedTotal}</h2>
           )}
 
         </div>
@@ -96,9 +96,13 @@ export default function CostComposition({ result, variant = 'default', showLockB
             <div className="cps-value">{formatCurrency(result.C_sample)}</div>
           </div>
         ) : (
-          <div className="metric metric-important">
-            <div className="label">Total study cost</div>
-            <div className="big">{formatCurrencyWhole(result.TRUE_COST)}</div>
+          <div className="metric metric-important metric-important--cps">
+            <div className="cps-label-stack">
+              <span>Cost</span>
+              <span>Per</span>
+              <span>Sample</span>
+            </div>
+            <div className="cps-value">{formatCurrency(result.C_sample)}</div>
           </div>
         )}
         <div className="metric">

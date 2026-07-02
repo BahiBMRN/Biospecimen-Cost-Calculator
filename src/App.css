@@ -576,6 +576,10 @@ input[type='number'] {
 	gap: 14px;
 }
 
+#scenarioRightSidebar .scenario-delta-reset-btn {
+	width: 100%;
+}
+
 #scenarioRightSidebar .delta-chart-block {
 	text-align: center;
 }
@@ -749,6 +753,23 @@ input[type='number'] {
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
+}
+
+.score-box--scenario-total {
+	width: calc(100% + 20px);
+	min-width: 0;
+	overflow: hidden;
+	container-type: inline-size;
+}
+
+.score-box--scenario-total .score-label {
+	white-space: nowrap;
+}
+
+.score-box--scenario-total .score-value {
+	font-size: clamp(2.5rem, 19cqi, 4.3rem);
+	white-space: nowrap;
+	max-width: 100%;
 }
 
 .score-box--blue {
