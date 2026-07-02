@@ -28,42 +28,9 @@ export default function ScenariosView({
 
       <div className="layout scenario-layout">
         <aside id="scenarioLeftSidebar">
-          <div className="panel" id="scenarioBtnPanel">
-            <div className="controls">
-              <details className="accordion scenario-list-accordion" open>
-                <summary>
-                  <span className="scenario-heading">Presets</span>
-                  <button
-                    type="button"
-                    className="reset-scenario-btn"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      resetScenarioToLocked();
-                    }}
-                  >
-                    Reset
-                  </button>
-                </summary>
-                <div className="accordion-content">
-                  <div className="button-row scenario-buttons">
-                    {Object.keys(SCENARIO_LABELS).map((scenario) => (
-                      <button
-                        key={scenario}
-                        className={activeScenario === scenario ? 'active' : ''}
-                        onClick={() => applyScenario(scenario)}
-                      >
-                        {SCENARIO_LABELS[scenario]}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </details>
-            </div>
-          </div>
           <div className="panel" id="scenarioStudyLeversPanel">
             <div className="controls">
-              <details className="accordion scenario-study-levers">
+              <details className="accordion scenario-study-levers" open>
                 <summary>Study Levers</summary>
                 <div className="accordion-content volume-grid">
                   {volumeItems.map((item) => (
@@ -103,6 +70,28 @@ export default function ScenariosView({
               </details>
             </div>
           </div>
+          <div className="panel" id="scenarioBtnPanel">
+            <div className="controls">
+              <details className="accordion scenario-list-accordion">
+                <summary>
+                  <span className="scenario-heading">Presets</span>
+                </summary>
+                <div className="accordion-content">
+                  <div className="button-row scenario-buttons">
+                    {Object.keys(SCENARIO_LABELS).map((scenario) => (
+                      <button
+                        key={scenario}
+                        className={activeScenario === scenario ? 'active' : ''}
+                        onClick={() => applyScenario(scenario)}
+                      >
+                        {SCENARIO_LABELS[scenario]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </details>
+            </div>
+          </div>
         </aside>
 
         <main className="main-grid">
@@ -128,7 +117,19 @@ export default function ScenariosView({
 
         <aside id="scenarioRightSidebar">
           <section className="panel">
-            <DeltaComparisonChart baselineResult={lockedResult} scenarioResult={scenarioResult} />
+            <DeltaComparisonChart
+              baselineResult={lockedResult}
+              scenarioResult={scenarioResult}
+              footer={(
+                <button
+                  type="button"
+                  className="reset-scenario-btn scenario-delta-reset-btn"
+                  onClick={resetScenarioToLocked}
+                >
+                  Reset
+                </button>
+              )}
+            />
           </section>
         </aside>
       </div>

@@ -19,7 +19,7 @@ export default function NumberControl({ item, value, onChange, withSlider, disab
             title={controlTitle}
             onChange={(event) => {
               if (!disabled) {
-                onChange(item.key, Number(event.target.value));
+                onChange(item.key, event.target.value === '' ? null : Number(event.target.value));
               }
             }}
           />

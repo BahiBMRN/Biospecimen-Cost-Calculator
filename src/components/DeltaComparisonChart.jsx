@@ -1,7 +1,7 @@
 import { formatCurrency, formatSignedCurrency, formatSignedCurrencyWhole } from '../utils.js';
 import { GROUP_ABBREV } from '../constants.js';
 
-export default function DeltaComparisonChart({ baselineResult, scenarioResult }) {
+export default function DeltaComparisonChart({ baselineResult, scenarioResult, footer }) {
   const abbrevs = ['K', 'L', 'T', 'S', 'D'];
   const colorByAbbrev = (() => {
     const map = {};
@@ -92,6 +92,7 @@ export default function DeltaComparisonChart({ baselineResult, scenarioResult })
           {totalPercentDelta === null ? 'Percent delta unavailable at $0 baseline' : `${totalPercentDelta > 0 ? '+' : totalPercentDelta < 0 ? '-' : ''}${Math.abs(totalPercentDelta).toFixed(0)}% Δ`}
         </div>
       </div>
+      {footer}
     </div>
   );
 }

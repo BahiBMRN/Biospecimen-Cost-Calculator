@@ -31,7 +31,7 @@ export default function CalculatorView({ volumeItems, costGroups, calculatorInpu
           </div>
           <div className="controls">
             {costGroups.map((groupObj) => (
-              <details className={`accordion cat-${categoryClass(groupObj.group)}`} key={groupObj.group} open>
+              <details className={`accordion cat-${categoryClass(groupObj.group)}`} key={groupObj.group} open={groupObj.group === 'Kitting & Site'}>
                 <summary>{groupObj.group} ({GROUP_ABBREV[groupObj.group]})</summary>
                 <div className="accordion-content">
                   {groupObj.items.map((item) => (
