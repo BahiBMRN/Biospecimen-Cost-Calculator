@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { SD_SAMPLE_TYPE_CONTAINERS } from '../constants.js';
 import { calculateDisposal, calculateStorage, calculateStoreAndDispose } from '../calculate.js';
 import { buildSdExportModel } from '../export/exportModel.js';
@@ -22,7 +23,7 @@ const DEFAULT_DISPOSE_INPUTS = {
   totalSamples: '',
 };
 
-export default function StoreDisposeView() {
+export default function StoreDisposeView({ headerActionsNode }) {
   const [activeSDTab, setActiveSDTab] = useState('store');
   const [storeInputs, setStoreInputsRaw] = useState(DEFAULT_STORE_INPUTS);
   const [disposeInputs, setDisposeInputsRaw] = useState(DEFAULT_DISPOSE_INPUTS);
@@ -75,6 +76,11 @@ export default function StoreDisposeView() {
 
   return (
     <div className="shell">
+      {headerActionsNode && createPortal(
+        <ExportToolbar onExcel={handleExportExcel} onImage={handleExportImage} />,
+        headerActionsNode
+      )}
+
       <section className="hero">
         <h1>Store or Dispose</h1>
         <p className="sub">
@@ -82,7 +88,6 @@ export default function StoreDisposeView() {
           Compare and contrast Biospecimen Storage &amp; Disposal strategies
           <span className="hero-dot" style={{ marginRight: 0, marginLeft: 10 }} />
         </p>
-        <ExportToolbar onExcel={handleExportExcel} onImage={handleExportImage} />
       </section>
 
       <div className="layout sd-layout">

@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { GROUP_ABBREV } from '../constants.js';
 import { categoryClass } from '../utils.js';
 import { buildCalculatorExportModel } from '../export/exportModel.js';
@@ -11,7 +12,7 @@ import ExportToolbar from '../components/ExportToolbar.jsx';
 import NumberControl from '../components/NumberControl.jsx';
 import RegionPanel from '../components/RegionPanel.jsx';
 
-export default function CalculatorView({ volumeItems, costGroups, calculatorInputs, updateCalculatorValue, calculatorResult, onLockIn, onReset, onPatch, onSavePreset }) {
+export default function CalculatorView({ volumeItems, costGroups, calculatorInputs, updateCalculatorValue, calculatorResult, onLockIn, onReset, onPatch, onSavePreset, headerActionsNode }) {
   const handleExportExcel = () => {
     const model = buildCalculatorExportModel(calculatorInputs, calculatorResult);
     exportToExcel(model, 'bslcc-calculator.xlsx');
@@ -23,6 +24,15 @@ export default function CalculatorView({ volumeItems, costGroups, calculatorInpu
 
   return (
     <div className="shell">
+      {headerActionsNode && createPortal(
+        <ExportToolbar
+          onExcel={handleExportExcel}
+          onImage={handleExportImage}
+          onSavePreset={onSavePreset ? (name) => onSavePreset(name, calculatorInputs) : undefined}
+        />,
+        headerActionsNode
+      )}
+
       <section className="hero">
         <h1>Biospecimen Study Lifetime Cost Calculator</h1>
         <p className="sub">
@@ -30,11 +40,6 @@ export default function CalculatorView({ volumeItems, costGroups, calculatorInpu
           Model the cost of biospecimen collections for the lifetime of the study by adjusting the below parameters to view cost impacts in real time
           <span className="hero-dot" style={{ marginRight: 0, marginLeft: 10 }} />
         </p>
-        <ExportToolbar
-          onExcel={handleExportExcel}
-          onImage={handleExportImage}
-          onSavePreset={onSavePreset ? (name) => onSavePreset(name, calculatorInputs) : undefined}
-        />
       </section>
 
       <div className="layout">
@@ -85,9 +90,14 @@ export default function CalculatorView({ volumeItems, costGroups, calculatorInpu
                 />
               ))}
             </div>
-            <div className="controls volume-grid">
-              <RegionPanel inputs={calculatorInputs} onPatch={onPatch} />
-              <ExpeditePanel inputs={calculatorInputs} onPatch={onPatch} />
+            <div className="controls">
+              <details className="accordion advanced-settings">
+                <summary>Fine-Tune</summary>
+                <div className="accordion-content volume-grid">
+                  <RegionPanel inputs={calculatorInputs} onPatch={onPatch} />
+                  <ExpeditePanel inputs={calculatorInputs} onPatch={onPatch} />
+                </div>
+              </details>
             </div>
           </section>
 

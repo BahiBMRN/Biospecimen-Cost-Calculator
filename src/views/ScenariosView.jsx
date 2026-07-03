@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { GROUP_ABBREV, SCENARIO_LABELS, SCENARIO_META } from '../constants.js';
 import { categoryClass } from '../utils.js';
 import { buildScenarioExportModel } from '../export/exportModel.js';
@@ -71,6 +72,7 @@ export default function ScenariosView({
   customPresets,
   applyCustomPreset,
   removeCustomPreset,
+  headerActionsNode,
 }) {
   const handleExportExcel = () => {
     const model = buildScenarioExportModel(lockedResult, scenarioResult, effectiveScenarioInputs, activeScenario);
@@ -83,6 +85,15 @@ export default function ScenariosView({
 
   return (
     <div className="shell">
+      {headerActionsNode && createPortal(
+        <ExportToolbar
+          onExcel={handleExportExcel}
+          onImage={handleExportImage}
+          onSavePreset={onSavePreset ? (name) => onSavePreset(name, effectiveScenarioInputs) : undefined}
+        />,
+        headerActionsNode
+      )}
+
       <section className="hero">
         <h1>What-If Scenarios</h1>
         <p className="sub">
@@ -90,11 +101,6 @@ export default function ScenariosView({
           Select a predefined scenario or fine-tune study and sample levers to see impact on total costs
           <span className="hero-dot" style={{ marginRight: 0, marginLeft: 10 }} />
         </p>
-        <ExportToolbar
-          onExcel={handleExportExcel}
-          onImage={handleExportImage}
-          onSavePreset={onSavePreset ? (name) => onSavePreset(name, effectiveScenarioInputs) : undefined}
-        />
       </section>
 
       <div className="layout scenario-layout">
@@ -112,9 +118,14 @@ export default function ScenariosView({
                       onChange={updateScenarioValue}
                     />
                   ))}
-                  <RegionPanel inputs={effectiveScenarioInputs} onPatch={onPatchScenario} />
-                  <ExpeditePanel inputs={effectiveScenarioInputs} onPatch={onPatchScenario} />
                 </div>
+                <details className="accordion sub-accordion advanced-settings">
+                  <summary>Fine-Tune</summary>
+                  <div className="accordion-content volume-grid">
+                    <RegionPanel inputs={effectiveScenarioInputs} onPatch={onPatchScenario} />
+                    <ExpeditePanel inputs={effectiveScenarioInputs} onPatch={onPatchScenario} />
+                  </div>
+                </details>
               </details>
             </div>
           </div>
@@ -167,7 +178,7 @@ export default function ScenariosView({
                           className={`custom-preset-btn${activeScenario === `custom:${preset.id}` ? ' active' : ''}`}
                           onClick={() => applyCustomPreset(preset)}
                         >
-                          <span className="custom-preset-tag">Custom</span>
+                          <span className="custom-preset-tag" title="Custom preset" aria-label="Custom preset" />
                           {preset.name}
                         </button>
                         <button

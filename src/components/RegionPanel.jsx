@@ -49,7 +49,7 @@ export default function RegionPanel({ inputs, onPatch }) {
         </div>
       </div>
 
-      <details className="accordion fine-tune-details">
+      <details className="accordion fine-tune-details sub-accordion">
         <summary>Fine-tune regional multipliers</summary>
         <div className="accordion-content">
           {FACTOR_FIELDS.map((field) => (
