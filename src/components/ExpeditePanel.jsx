@@ -65,7 +65,7 @@ export default function ExpeditePanel({ inputs, onPatch }) {
         </div>
       </div>
 
-      <details className="accordion fine-tune-details">
+      <details className="accordion fine-tune-details sub-accordion">
         <summary>Fine-tune surcharges</summary>
         <div className="accordion-content">
           <div className="control">

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CONFIG, PRESETS, STARTUP_DEFAULTS } from './constants.js';
 import { calculate } from './calculate.js';
 import { clamp } from './utils.js';
@@ -17,6 +17,12 @@ function App() {
   const [scenarioInputs, setScenarioInputs] = useState(null);
   const [activeScenario, setActiveScenario] = useState(null);
   const [customPresets, setCustomPresets] = useState(() => loadCustomPresets());
+  const [headerActionsNode, setHeaderActionsNode] = useState(null);
+  const headerActionsRef = useCallback((node) => {
+    if (node) {
+      setHeaderActionsNode(node);
+    }
+  }, []);
 
   const volumeItems = useMemo(() => CONFIG.filter((item) => item.category === 'Volume'), []);
   const costGroups = useMemo(() => {
@@ -188,6 +194,7 @@ function App() {
         <button className={activeTab === 'tiered' ? 'tab-btn active' : 'tab-btn'} onClick={() => setActiveTab('tiered')}>
           Tiered Assays
         </button>
+        <div className="tab-bar-actions" ref={headerActionsRef} />
       </nav>
 
       {activeTab === 'calculator' && (
@@ -201,6 +208,7 @@ function App() {
           onReset={resetCalculatorToStartup}
           onPatch={patchCalculatorInputs}
           onSavePreset={saveCurrentAsPreset}
+          headerActionsNode={headerActionsNode}
         />
       )}
 
@@ -220,12 +228,15 @@ function App() {
           customPresets={customPresets}
           applyCustomPreset={applyCustomPreset}
           removeCustomPreset={removeCustomPreset}
+          headerActionsNode={headerActionsNode}
         />
       )}
 
-      {activeTab === 'wif' && <StoreDisposeView />}
+      {activeTab === 'wif' && <StoreDisposeView headerActionsNode={headerActionsNode} />}
 
-      {activeTab === 'tiered' && <TieredAssaysView />}
+      {activeTab === 'tiered' && <TieredAssaysView headerActionsNode={headerActionsNode} />}
+
+      <footer className="app-footer">For any issues or questions, please contact CLBM</footer>
     </div>
     </ErrorBoundary>
   );

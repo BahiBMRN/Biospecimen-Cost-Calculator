@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { TIERED_DEFAULTS } from '../constants.js';
 import { buildPivotSeries, calculateTieredAssay } from '../calculate.js';
 import { formatCurrency, formatCurrencyWhole, formatNumber } from '../utils.js';
@@ -22,7 +23,7 @@ const RECOMMENDATION_LABELS = {
   equal: 'Either',
 };
 
-export default function TieredAssaysView() {
+export default function TieredAssaysView({ headerActionsNode }) {
   const [inputs, setInputs] = useState(TIERED_DEFAULTS);
 
   const onPatch = (patch) => setInputs((current) => ({ ...current, ...patch }));
@@ -59,6 +60,11 @@ export default function TieredAssaysView() {
 
   return (
     <div className="shell">
+      {headerActionsNode && createPortal(
+        <ExportToolbar onExcel={handleExportExcel} onImage={handleExportImage} />,
+        headerActionsNode
+      )}
+
       <section className="hero">
         <h1>Calculate the Pivot Point for Tiered Assays</h1>
         <p className="sub">
@@ -66,7 +72,6 @@ export default function TieredAssaysView() {
           Compare a tiered screen/confirm/titer cascade against a flat assay and find the break-even screen-positivity rate
           <span className="hero-dot" style={{ marginRight: 0, marginLeft: 10 }} />
         </p>
-        <ExportToolbar onExcel={handleExportExcel} onImage={handleExportImage} />
       </section>
 
       <div className="layout" id="tieredCaptureRoot">
