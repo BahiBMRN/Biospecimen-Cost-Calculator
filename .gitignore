@@ -4,6 +4,7 @@ application-summary_*.md
 s&d_plan.md
 tiered-assays-user-guide.md
 /markdown
+*.docx
 
 # === Environment files (may contain API keys, connection strings) ===
 .env

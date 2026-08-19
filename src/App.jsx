@@ -191,9 +191,6 @@ function App() {
         <button className={activeTab === 'wif' ? 'tab-btn active' : 'tab-btn'} onClick={() => setActiveTab('wif')}>
           Store or Dispose
         </button>
-        <button className={activeTab === 'tiered' ? 'tab-btn active' : 'tab-btn'} onClick={() => setActiveTab('tiered')}>
-          Tiered Assays
-        </button>
         <div className="tab-bar-actions" ref={headerActionsRef} />
       </nav>
 
